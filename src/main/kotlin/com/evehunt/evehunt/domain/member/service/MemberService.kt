@@ -8,6 +8,5 @@ interface MemberService {
     fun getMember(memberId: Long): MemberResponse
     fun editMember(memberId: Long, memberEditRequest: MemberEditRequest): MemberResponse
     fun withdrawMember(memberId: Long): Long
-
     fun deleteAllMember()
 }

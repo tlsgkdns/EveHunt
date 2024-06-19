@@ -1,18 +1,31 @@
 package com.evehunt.evehunt.domain.event.model
 
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
+import com.evehunt.evehunt.domain.image.model.Image
+import com.evehunt.evehunt.domain.member.model.Member
+import com.evehunt.evehunt.global.common.BaseTimeEntity
+import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedBy
+import java.time.ZonedDateTime
 
 @Entity
 class Event(
-    private val title: String,
-    private val description: String,
-    private val image: String,
-    private val capacity: Int,
-    private val eventStatus: EventStatus
-)
+    var title: String,
+    var description: String,
+    @OneToOne(fetch = FetchType.LAZY)
+    var image: Image?,
+    var capacity: Int,
+    var eventStatus: EventStatus,
+    var winMessage: String,
+    var closeAt: ZonedDateTime,
+    var eventType: EventType
+): BaseTimeEntity()
 {
     @Id
-    private val id: Long? = null
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null
+
+    @CreatedBy
+    @ManyToOne
+    val host: Member? = null
 }
 
