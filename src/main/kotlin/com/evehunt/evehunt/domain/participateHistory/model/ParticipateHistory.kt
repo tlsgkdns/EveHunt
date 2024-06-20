@@ -1,17 +1,22 @@
 package com.evehunt.evehunt.domain.participateHistory.model
 
 import com.evehunt.evehunt.domain.event.model.Event
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.ManyToOne
+import com.evehunt.evehunt.domain.member.model.Member
+import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedBy
 
 @Entity
 class ParticipateHistory(
     @ManyToOne
-    private val event: Event,
-    private val answer: String
+    val event: Event,
+    val answer: String,
 ) {
 
+    @CreatedBy
+    @ManyToOne
+    val participant: Member? = null
+
     @Id
-    private val id: Long? = null
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null
 }
