@@ -35,7 +35,7 @@ class EventServiceImpl(
 
     @Transactional
     override fun hostEvent(eventHostRequest: EventHostRequest): EventResponse {
-        return eventHostRequest.to().let {
+        return eventRepository.save(eventHostRequest.to()).let {
             EventResponse.from(it)
         }
     }

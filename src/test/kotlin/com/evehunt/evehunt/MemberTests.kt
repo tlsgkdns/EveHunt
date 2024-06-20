@@ -2,6 +2,7 @@ package com.evehunt.evehunt
 
 import com.evehunt.evehunt.domain.member.dto.MemberEditRequest
 import com.evehunt.evehunt.domain.member.dto.MemberRegisterRequest
+import com.evehunt.evehunt.domain.member.dto.MemberSignInRequest
 import com.evehunt.evehunt.domain.member.service.MemberService
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
 import io.kotest.assertions.throwables.shouldThrow
@@ -11,12 +12,17 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.mock.web.MockHttpServletResponse
+import org.springframework.test.web.servlet.MockMvc
 import kotlin.random.Random
 
 @SpringBootTest
+@AutoConfigureMockMvc
 class MemberTests  @Autowired constructor(
-    val memberService: MemberService
+    val memberService: MemberService,
+    val mockMvc: MockMvc
 ) {
     companion object
     {
@@ -75,6 +81,4 @@ class MemberTests  @Autowired constructor(
         member.name shouldBe newName
         memberService.getMember(3).name shouldBe newName
     }
-
-
 }

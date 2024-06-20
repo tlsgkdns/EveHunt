@@ -22,10 +22,10 @@ class Event(
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null
+    var id: Long? = null
 
     @CreatedBy
-    @ManyToOne
-    val host: Member? = null
+    @ManyToOne(fetch = FetchType.LAZY)
+    var host: Member? = null
 }
 

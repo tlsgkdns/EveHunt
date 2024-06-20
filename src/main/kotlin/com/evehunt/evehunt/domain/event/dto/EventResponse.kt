@@ -13,7 +13,7 @@ data class EventResponse(
     val capacity: Int,
     val status: EventStatus,
     val eventType: EventType,
-    val hostId: Long,
+    val hostId: Long?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val closeAt: LocalDateTime
@@ -30,7 +30,7 @@ data class EventResponse(
                 capacity = event.capacity,
                 status = event.eventStatus,
                 eventType = event.eventType,
-                hostId = event.host?.id!!,
+                hostId = event.host?.id,
                 createdAt = event.createdAt.toLocalDateTime(),
                 closeAt = event.closeAt.toLocalDateTime(),
                 updatedAt = event.updatedAt.toLocalDateTime(),

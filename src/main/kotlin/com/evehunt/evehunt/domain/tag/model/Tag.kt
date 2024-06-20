@@ -6,8 +6,8 @@ import jakarta.persistence.*
 @Entity
 class Tag (
     @ManyToOne
-    private val event: Event,
-    private val tagName: String
+    var event: Event,
+    var tagName: String
 ){
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

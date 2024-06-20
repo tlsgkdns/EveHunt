@@ -4,6 +4,7 @@ import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.model.EventType
 import com.evehunt.evehunt.domain.image.model.Image
+import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -15,6 +16,7 @@ data class EventHostRequest(
     val capacity: Int,
     val status: EventStatus,
     val eventType: EventType,
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     val closeAt: LocalDateTime
 )
 {
