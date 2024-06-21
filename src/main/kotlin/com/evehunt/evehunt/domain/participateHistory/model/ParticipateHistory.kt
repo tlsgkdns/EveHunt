@@ -20,5 +20,5 @@ class ParticipateHistory(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
 
-    val status: EventParticipateStatus = EventParticipateStatus.PARTICIPATING
+    var status: EventParticipateStatus = EventParticipateStatus.PARTICIPATING
 }
