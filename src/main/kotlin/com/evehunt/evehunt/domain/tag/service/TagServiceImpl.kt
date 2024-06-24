@@ -6,7 +6,7 @@ import com.evehunt.evehunt.domain.tag.dto.TagAddRequest
 import com.evehunt.evehunt.domain.tag.dto.TagResponse
 import com.evehunt.evehunt.domain.tag.model.Tag
 import com.evehunt.evehunt.domain.tag.repository.TagRepository
-import com.evehunt.evehunt.global.exception.exception.EventHasFullTagException
+import com.evehunt.evehunt.global.exception.exception.FullCapacityException
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
@@ -42,7 +42,7 @@ class TagServiceImpl(
     @Transactional
     override fun addTag(eventId: Long, tagAddRequest: TagAddRequest): TagResponse {
         val event = getExistEvent(eventId)
-        if(getTags(eventId).size >= tagCapacity) throw EventHasFullTagException(event.title)
+        if(getTags(eventId).size >= tagCapacity) throw FullCapacityException("Tag", eventId.toString(), tagCapacity)
         val tag = tagRepository.save(tagAddRequest.to(event))
         return TagResponse.from(tag)
     }

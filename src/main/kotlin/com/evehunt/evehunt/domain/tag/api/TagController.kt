@@ -32,7 +32,6 @@ class TagController(
         return tagService.addTag(eventId, tagAddRequest).let {
             ResponseEntity.status(HttpStatus.CREATED).body(it)
         }
-
     }
     @DeleteMapping()
     fun deleteTags(@PathVariable eventId: Long): ResponseEntity<Unit>

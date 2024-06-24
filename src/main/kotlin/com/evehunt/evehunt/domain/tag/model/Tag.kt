@@ -5,11 +5,11 @@ import jakarta.persistence.*
 
 @Entity
 class Tag (
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     var event: Event,
     var tagName: String
 ){
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private val id: Long? = null
+    val id: Long? = null
 }

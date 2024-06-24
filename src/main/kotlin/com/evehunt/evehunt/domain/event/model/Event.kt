@@ -23,7 +23,7 @@ class Event(
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    val id: Long? = null
 
     @CreatedBy
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
