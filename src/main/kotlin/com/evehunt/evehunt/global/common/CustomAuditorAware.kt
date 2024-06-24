@@ -17,7 +17,7 @@ class CustomAuditorAware(
             .map { it.authentication }
             .map { it.principal as UserDetails }
             .map {
-                if(it.password.isEmpty()) null
+                if(it.username == "anonymous") null
                 else memberRepository.findMemberByEmail(it.username)
             }
     }

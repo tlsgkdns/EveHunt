@@ -19,10 +19,8 @@ import org.springframework.test.web.servlet.MockMvc
 import kotlin.random.Random
 
 @SpringBootTest
-@AutoConfigureMockMvc
 class MemberTests  @Autowired constructor(
-    val memberService: MemberService,
-    val mockMvc: MockMvc
+    val memberService: MemberService
 ) {
     companion object
     {
