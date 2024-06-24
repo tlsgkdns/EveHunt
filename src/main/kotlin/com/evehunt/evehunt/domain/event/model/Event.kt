@@ -16,6 +16,7 @@ class Event(
     var capacity: Int,
     var eventStatus: EventStatus,
     var winMessage: String,
+    var question: String?,
     var closeAt: ZonedDateTime,
     var eventType: EventType
 ): BaseTimeEntity()
@@ -25,7 +26,7 @@ class Event(
     var id: Long? = null
 
     @CreatedBy
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     var host: Member? = null
 }
 

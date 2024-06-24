@@ -11,8 +11,8 @@ import com.evehunt.evehunt.domain.participateHistory.model.strategy.PickWinnerSt
 import com.evehunt.evehunt.domain.participateHistory.repository.ParticipateHistoryRepository
 import com.evehunt.evehunt.global.common.PageRequest
 import com.evehunt.evehunt.global.common.PageResponse
-import com.evehunt.evehunt.global.common.RedisLockService
 import com.evehunt.evehunt.global.exception.exception.AlreadyExistModelException
+import com.evehunt.evehunt.global.exception.exception.FullCapacityException
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -21,8 +21,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class ParticipateHistoryServiceImpl(
     private val participateHistoryRepository: ParticipateHistoryRepository,
-    private val eventRepository: EventRepository,
-    private val redisLockService: RedisLockService
+    private val eventRepository: EventRepository
 ): ParticipateHistoryService {
     val winPickWinnerStrategy: PickWinnerStrategy = PickWinnerBruteforce()
     fun getExistEvent(eventId: Long): Event
@@ -35,16 +34,20 @@ class ParticipateHistoryServiceImpl(
         return participateHistoryRepository.getParticipateHistory(eventId, memberEmail)
             ?: throw ModelNotFoundException("Participate", memberEmail)
     }
-    @Transactional
     override fun participateEvent(eventId: Long, memberEmail: String, participateRequest: ParticipateRequest): ParticipateResponse {
         lateinit var participateHistoryResponse: ParticipateResponse
         if(participateHistoryRepository.getParticipateHistory(eventId, memberEmail) != null)
             throw AlreadyExistModelException(eventId.toString())
-        redisLockService.tryLockWith("Event")
-        {
-            val event = getExistEvent(eventId)
-            participateHistoryResponse = participateHistoryRepository.save(participateRequest.to(event))
+        val event = getExistEvent(eventId)
+        try {
+            participateHistoryRepository.getLock("Lock $eventId", 3000)
+            if(getParticipateHistoryByEvent(eventId).size + 1 > event.capacity)
+                throw FullCapacityException("Event", eventId.toString(), event.capacity)
+            val participateHistory = participateRequest.to(event)
+            participateHistoryResponse = participateHistoryRepository.save(participateHistory)
                 .let { ParticipateResponse.from(it) }
+        } finally {
+            participateHistoryRepository.releaseLock("Lock $eventId")
         }
         return participateHistoryResponse
     }
@@ -69,7 +72,6 @@ class ParticipateHistoryServiceImpl(
         return PageResponse.of(pageRequest, content, pages.totalElements.toInt())
     }
 
-    @Transactional
     override fun getParticipateHistoryByEvent(eventId: Long): List<ParticipateResponse> {
         return participateHistoryRepository.getParticipantsByEvent(eventId).map { ParticipateResponse.from(it) }
     }

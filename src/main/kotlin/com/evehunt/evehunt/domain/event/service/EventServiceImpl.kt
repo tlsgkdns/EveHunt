@@ -25,11 +25,12 @@ class EventServiceImpl(
     @Transactional
     override fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse {
         val event = getValidatedEvent(eventId)
-        event.title = eventEditRequest.title
-        event.winMessage = eventEditRequest.winMessage
+        event.title = eventEditRequest.title ?: event.title
+        event.winMessage = eventEditRequest.winMessage ?: event.winMessage
         event.image = Image.from(eventEditRequest.eventImage)
-        event.description = eventEditRequest.description
-        event.closeAt = eventEditRequest.closeAt.atZone(ZoneId.of("Asia/Seoul"))
+        event.description = eventEditRequest.description ?: event.description
+        event.closeAt = eventEditRequest.closeAt?.atZone(ZoneId.of("Asia/Seoul")) ?: event.closeAt
+        event.capacity = eventEditRequest.capacity ?: event.capacity
         return eventRepository.save(event).let { EventResponse.from(it) }
     }
 

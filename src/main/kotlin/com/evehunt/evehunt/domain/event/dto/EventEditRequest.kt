@@ -4,11 +4,11 @@ import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDateTime
 
 data class EventEditRequest(
-    val title: String,
-    val description: String,
-    val winMessage: String,
+    val title: String?,
+    val description: String?,
+    val winMessage: String?,
     val eventImage: String?,
-    val capacity: Int,
+    val capacity: Int?,
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    val closeAt: LocalDateTime
+    val closeAt: LocalDateTime?
 )

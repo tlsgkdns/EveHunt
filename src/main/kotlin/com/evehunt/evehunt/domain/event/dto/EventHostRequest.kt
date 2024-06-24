@@ -12,12 +12,12 @@ data class EventHostRequest(
     val title: String,
     val description: String,
     val winMessage: String,
-    val eventImage: String,
+    val eventImage: String?,
     val capacity: Int,
-    val status: EventStatus,
     val eventType: EventType,
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    val closeAt: LocalDateTime
+    val closeAt: LocalDateTime,
+    val question: String?
 )
 {
     fun to(): Event
@@ -30,7 +30,8 @@ data class EventHostRequest(
             eventType = eventType,
             eventStatus = EventStatus.PROCEED,
             closeAt = closeAt.atZone(ZoneId.of("Asia/Seoul")),
-            image = Image.from(eventImage)
+            image = Image.from(eventImage),
+            question = question
         )
     }
 }
