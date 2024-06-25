@@ -8,4 +8,5 @@ import org.springframework.data.domain.Pageable
 interface QueryDslEventRepository {
 
     fun searchEvents(pageRequest: Pageable, keyword: String?): Page<Event>
+    fun getExpiredEvents(): List<Event>
 }

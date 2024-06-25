@@ -4,6 +4,7 @@ import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
 import com.evehunt.evehunt.domain.event.model.Event
+import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.repository.EventRepository
 import com.evehunt.evehunt.domain.image.model.Image
 import com.evehunt.evehunt.global.common.PageRequest
@@ -60,5 +61,15 @@ class EventServiceImpl(
         val event = getValidatedEvent(eventId)
         eventRepository.delete(event)
         return eventId
+    }
+
+    @Transactional
+    override fun setExpiredEventsClose() {
+        val eventList = eventRepository.getExpiredEvents()
+        for (event in eventList)
+        {
+            event.eventStatus = EventStatus.CLOSED
+            eventRepository.save(event)
+        }
     }
 }

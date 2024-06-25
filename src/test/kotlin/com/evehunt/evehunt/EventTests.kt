@@ -2,6 +2,7 @@ package com.evehunt.evehunt
 
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
+import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.model.EventType
 import com.evehunt.evehunt.domain.event.service.EventService
 import com.evehunt.evehunt.domain.member.dto.MemberRegisterRequest
@@ -47,7 +48,7 @@ class EventTests @Autowired constructor(
         fun registerMember(@Autowired memberService: MemberService)
         {
             memberService.deleteAllMember()
-            for (i in 1..1000) {
+            for (i in 1..100) {
                 val email = i.toString()
                 val memberRegisterRequest = MemberRegisterRequest(
                     email = email,
@@ -193,5 +194,34 @@ class EventTests @Autowired constructor(
         countDownLatch.await()
         val list = participateHistoryService.getParticipateHistoryByEvent(1L)
         list.size shouldBe 700
+    }
+    @Test
+    fun testExpiredEvent()
+    {
+        val eventRequest = EventHostRequest(
+            title = "Hello World!",
+            description = "I am Here",
+            eventImage = null,
+            closeAt = LocalDateTime.now().plusSeconds(3),
+            winMessage = "Winner Winner Chicken Dinner",
+            question = "Do you like me?",
+            capacity = 700,
+            eventType = EventType.DRAWLOT,
+        )
+        val loginRequest = MemberSignInRequest(
+            email = "1",
+            password = "1"
+        )
+        val jwt = memberService.signIn(loginRequest).token
+        val eventJson = objectMapper.writeValueAsString(eventRequest)
+        mockMvc.perform(post("/events")
+            .header("Authorization", "Bearer $jwt")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(eventJson))
+            .andExpect(MockMvcResultMatchers.status().isOk)
+        Thread.sleep(5001)
+        eventService.getEvent(1L).status shouldBe EventStatus.CLOSED
+        participateEvent(1L)
+        participateHistoryService.getParticipateHistoryByEvent(1L).size shouldBe 0
     }
 }

@@ -12,4 +12,5 @@ interface EventService {
     fun getEvent(eventId: Long): EventResponse
     fun getEvents(pageRequest: PageRequest, keyword: String?): PageResponse<EventResponse>
     fun closeEvent(eventId: Long): Long
+    fun setExpiredEventsClose()
 }

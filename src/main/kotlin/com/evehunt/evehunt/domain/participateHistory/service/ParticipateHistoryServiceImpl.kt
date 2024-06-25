@@ -1,6 +1,7 @@
 package com.evehunt.evehunt.domain.participateHistory.service
 
 import com.evehunt.evehunt.domain.event.model.Event
+import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.repository.EventRepository
 import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
@@ -13,6 +14,7 @@ import com.evehunt.evehunt.global.common.PageRequest
 import com.evehunt.evehunt.global.common.PageResponse
 import com.evehunt.evehunt.global.exception.exception.AlreadyExistModelException
 import com.evehunt.evehunt.global.exception.exception.FullCapacityException
+import com.evehunt.evehunt.global.exception.exception.InvalidEventException
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -41,8 +43,8 @@ class ParticipateHistoryServiceImpl(
         val event = getExistEvent(eventId)
         try {
             participateHistoryRepository.getLock("Lock $eventId", 3000)
-            if(getParticipateHistoryByEvent(eventId).size + 1 > event.capacity)
-                throw FullCapacityException("Event", eventId.toString(), event.capacity)
+            if(event.eventStatus != EventStatus.PROCEED) throw InvalidEventException(eventId)
+            if(getParticipateHistoryByEvent(eventId).size + 1 > event.capacity) throw FullCapacityException("Event", eventId.toString(), event.capacity)
             val participateHistory = participateRequest.to(event)
             participateHistoryResponse = participateHistoryRepository.save(participateHistory)
                 .let { ParticipateResponse.from(it) }
@@ -61,7 +63,8 @@ class ParticipateHistoryServiceImpl(
     @Transactional
     override fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
         val participantList = participateHistoryRepository.getParticipantsByEvent(eventId)
-        val list = winPickWinnerStrategy.pick(participantList, eventWinnerRequest.eventWinners).map { participateHistoryRepository.save(it) }
+        val list = winPickWinnerStrategy.pick(participantList, eventWinnerRequest.eventWinners)
+            .map { participateHistoryRepository.save(it) }
         return list.map { ParticipateResponse.from(it) }
     }
 
