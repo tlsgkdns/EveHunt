@@ -4,7 +4,6 @@ import com.evehunt.evehunt.domain.image.model.Image
 import com.evehunt.evehunt.domain.member.model.Member
 import com.evehunt.evehunt.global.common.BaseTimeEntity
 import jakarta.persistence.*
-import org.springframework.data.annotation.CreatedBy
 import java.time.ZonedDateTime
 
 @Entity
@@ -18,15 +17,15 @@ class Event(
     var winMessage: String,
     var question: String?,
     var closeAt: ZonedDateTime,
-    var eventType: EventType
+    var eventType: EventType,
+    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    var host: Member? = null
 ): BaseTimeEntity()
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
 
-    @CreatedBy
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    var host: Member? = null
+
 }
 

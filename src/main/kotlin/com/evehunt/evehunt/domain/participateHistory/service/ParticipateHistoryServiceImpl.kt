@@ -3,11 +3,12 @@ package com.evehunt.evehunt.domain.participateHistory.service
 import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.repository.EventRepository
+import com.evehunt.evehunt.domain.member.repository.MemberRepository
 import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.model.ParticipateHistory
-import com.evehunt.evehunt.domain.participateHistory.model.strategy.PickWinnerBruteforce
+import com.evehunt.evehunt.domain.participateHistory.model.strategy.PickWinnerBinarySearch
 import com.evehunt.evehunt.domain.participateHistory.model.strategy.PickWinnerStrategy
 import com.evehunt.evehunt.domain.participateHistory.repository.ParticipateHistoryRepository
 import com.evehunt.evehunt.global.common.PageRequest
@@ -23,9 +24,10 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class ParticipateHistoryServiceImpl(
     private val participateHistoryRepository: ParticipateHistoryRepository,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val memberRepository: MemberRepository
 ): ParticipateHistoryService {
-    val winPickWinnerStrategy: PickWinnerStrategy = PickWinnerBruteforce()
+    val winPickWinnerStrategy: PickWinnerStrategy = PickWinnerBinarySearch()
     fun getExistEvent(eventId: Long): Event
     {
         return eventRepository.findByIdOrNull(eventId)
@@ -41,11 +43,13 @@ class ParticipateHistoryServiceImpl(
         if(participateHistoryRepository.getParticipateHistory(eventId, memberEmail) != null)
             throw AlreadyExistModelException(eventId.toString())
         val event = getExistEvent(eventId)
+        val member = memberRepository.findMemberByEmail(memberEmail)
         try {
             participateHistoryRepository.getLock("Lock $eventId", 3000)
             if(event.eventStatus != EventStatus.PROCEED) throw InvalidEventException(eventId)
-            if(getParticipateHistoryByEvent(eventId).size + 1 > event.capacity) throw FullCapacityException("Event", eventId.toString(), event.capacity)
-            val participateHistory = participateRequest.to(event)
+            if(getParticipateHistoryByEvent(eventId).size + 1 > event.capacity)
+                throw FullCapacityException("Event", eventId.toString(), event.capacity)
+            val participateHistory = participateRequest.to(event, member)
             participateHistoryResponse = participateHistoryRepository.save(participateHistory)
                 .let { ParticipateResponse.from(it) }
         } finally {

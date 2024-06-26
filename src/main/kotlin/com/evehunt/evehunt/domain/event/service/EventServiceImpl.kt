@@ -7,6 +7,7 @@ import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.repository.EventRepository
 import com.evehunt.evehunt.domain.image.model.Image
+import com.evehunt.evehunt.domain.member.repository.MemberRepository
 import com.evehunt.evehunt.global.common.PageRequest
 import com.evehunt.evehunt.global.common.PageResponse
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
@@ -17,12 +18,14 @@ import java.time.ZoneId
 
 @Service
 class EventServiceImpl(
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val memberRepository: MemberRepository
 ): EventService {
     private fun getValidatedEvent(eventId: Long): Event
     {
         return eventRepository.findByIdOrNull(eventId) ?: throw ModelNotFoundException("Event", eventId.toString())
     }
+
     @Transactional
     override fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse {
         val event = getValidatedEvent(eventId)
@@ -36,8 +39,9 @@ class EventServiceImpl(
     }
 
     @Transactional
-    override fun hostEvent(eventHostRequest: EventHostRequest): EventResponse {
-        return eventRepository.save(eventHostRequest.to()).let {
+    override fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse {
+        val member = memberRepository.findMemberByEmail(username)
+        return eventRepository.save(eventHostRequest.to(member)).let {
             EventResponse.from(it)
         }
     }

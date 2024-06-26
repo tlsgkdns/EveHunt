@@ -14,7 +14,6 @@ class Scheduler(
     @Scheduled(fixedRate = 1000)
     fun closeExpiredEvents()
     {
-        println("Hello World!")
         eventService.setExpiredEventsClose()
     }
 }

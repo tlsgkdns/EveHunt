@@ -28,7 +28,7 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
 
     override fun getExpiredEvents(): List<Event> {
         val whereClause = BooleanBuilder(event.eventStatus.eq(EventStatus.PROCEED))
-            .and(event.closeAt.after(ZonedDateTime.now()))
+            .and(event.closeAt.before(ZonedDateTime.now()))
         return queryFactory.selectFrom(event)
             .where(whereClause)
             .fetch()

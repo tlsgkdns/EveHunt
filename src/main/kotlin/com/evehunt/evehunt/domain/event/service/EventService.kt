@@ -8,7 +8,7 @@ import com.evehunt.evehunt.global.common.PageResponse
 
 interface EventService {
     fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse
-    fun hostEvent(eventHostRequest: EventHostRequest): EventResponse
+    fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse
     fun getEvent(eventId: Long): EventResponse
     fun getEvents(pageRequest: PageRequest, keyword: String?): PageResponse<EventResponse>
     fun closeEvent(eventId: Long): Long
