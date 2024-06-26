@@ -11,6 +11,7 @@ import com.evehunt.evehunt.domain.member.repository.MemberRepository
 import com.evehunt.evehunt.global.common.PageRequest
 import com.evehunt.evehunt.global.common.PageResponse
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
+import com.evehunt.evehunt.global.infra.aop.annotation.CheckLoginMember
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,6 +27,7 @@ class EventServiceImpl(
         return eventRepository.findByIdOrNull(eventId) ?: throw ModelNotFoundException("Event", eventId.toString())
     }
 
+    @CheckLoginMember
     @Transactional
     override fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse {
         val event = getValidatedEvent(eventId)
@@ -60,6 +62,7 @@ class EventServiceImpl(
         return PageResponse.of(pageRequest, content, eventPages.totalElements.toInt())
     }
 
+    @CheckLoginMember
     @Transactional
     override fun closeEvent(eventId: Long): Long {
         val event = getValidatedEvent(eventId)

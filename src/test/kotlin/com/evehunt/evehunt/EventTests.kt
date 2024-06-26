@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,6 +26,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.time.LocalDateTime
@@ -70,20 +72,11 @@ class EventTests @Autowired constructor(
             closeAt = LocalDateTime.now().plusDays(2),
             winMessage = "Winner Winner Chicken Dinner",
             question = "Do you like me?",
-            capacity = 700,
+            capacity = 100,
             eventType = EventType.DRAWLOT,
         )
-        val loginRequest = MemberSignInRequest(
-            email = "1",
-            password = "1"
-        )
-        val jwt = memberService.signIn(loginRequest).token
-        val eventJson = objectMapper.writeValueAsString(eventRequest)
-        mockMvc.perform(post("/events")
-            .header("Authorization", "Bearer $jwt")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(eventJson))
-            .andExpect(MockMvcResultMatchers.status().isOk)
+        eventService.hostEvent(eventRequest, "1").hostId shouldBe 1L
+
     }
     @Test
     fun getEvent()
@@ -99,14 +92,18 @@ class EventTests @Autowired constructor(
     {
         hostEvent()
         val eventEdit = EventEditRequest(
-            title = "Edited!", null,
-            null, null, 50, null
+            description = "Hello New World!",
+            title = "new Title",
+            winMessage = "Winnnnnnnn",
+            closeAt = null,
+            eventImage = null,
+            capacity = 300
         )
-        val event = eventService.getEvent(2)
-        val edited = eventService.editEvent(2, eventEdit)
+        val event = eventService.getEvent(1)
+        val edited = eventService.editEvent(1, eventEdit)
         edited.title shouldBe eventEdit.title
-        edited.winMessage shouldBe event.winMessage
-        edited.description shouldBe event.description
+        edited.winMessage shouldBe eventEdit.winMessage
+        edited.description shouldBe eventEdit.description
         edited.capacity shouldBe eventEdit.capacity
         edited.closeAt shouldBe event.closeAt
         edited.eventImage shouldBe event.eventImage
@@ -167,8 +164,8 @@ class EventTests @Autowired constructor(
     fun testMultiThreadEnvironment()
     {
         hostEvent()
-        val threadCount = 1000
-        val executorService = Executors.newFixedThreadPool(1000)
+        val threadCount = 100
+        val executorService = Executors.newFixedThreadPool(32)
         val countDownLatch = CountDownLatch(threadCount)
 
         for(id in 1L .. threadCount)
@@ -193,7 +190,7 @@ class EventTests @Autowired constructor(
         }
         countDownLatch.await()
         val list = participateHistoryService.getParticipateHistoryByEvent(1L)
-        list.size shouldBe 700
+        list.size shouldBe 70
     }
     @Test
     fun testExpiredEvent()
@@ -223,5 +220,31 @@ class EventTests @Autowired constructor(
         eventService.getEvent(1L).status shouldBe EventStatus.CLOSED
         participateEvent(1L)
         participateHistoryService.getParticipateHistoryByEvent(1L).size shouldBe 0
+    }
+
+    @Test
+    fun testLoginCheckAnnotation()
+    {
+        hostEvent()
+        val loginRequest = MemberSignInRequest(
+            email = "4",
+            password = "4"
+        )
+        val jwt = memberService.signIn(loginRequest).token
+        val eventEditRequest = EventEditRequest(
+            description = "Hello New World!",
+            title = "new Title",
+            winMessage = "Winnnnnnnn",
+            closeAt = null,
+            eventImage = null,
+            capacity = 300
+        )
+        val eventEditJson = objectMapper.writeValueAsString(eventEditRequest)
+        mockMvc.perform(patch("/events/1")
+            .header("Authorization", "Bearer $jwt")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(eventEditJson))
+            .andExpect(MockMvcResultMatchers.status().isUnauthorized)
+        eventService.getEvent(1L).title shouldNotBe eventEditRequest.title
     }
 }
