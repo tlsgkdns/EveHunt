@@ -10,8 +10,8 @@ class ParticipateHistory(
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     val event: Event,
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    var participant: Member? = null,
-    val answer: String,
+    val participant: Member? = null,
+    var answer: String,
 ): BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

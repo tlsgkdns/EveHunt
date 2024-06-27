@@ -6,6 +6,7 @@ import com.evehunt.evehunt.domain.participateHistory.model.ParticipateHistory
 data class ParticipateResponse(
     val eventId: Long?,
     val memberId: Long?,
+    val answer: String,
     val status: EventParticipateStatus
 )
 {
@@ -13,7 +14,8 @@ data class ParticipateResponse(
     {
         fun from(participateHistory: ParticipateHistory): ParticipateResponse
         {
-            return ParticipateResponse(participateHistory.event.id, participateHistory.participant?.id, participateHistory.status)
+            return ParticipateResponse(participateHistory.event.id,
+                participateHistory.participant?.id, participateHistory.answer, participateHistory.status)
         }
     }
 }

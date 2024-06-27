@@ -15,9 +15,9 @@ import org.springframework.stereotype.Component
 @Component
 class MemberAOP(
     private val eventService: EventService,
-    private val memberService: MemberService
+    private val memberService: MemberService,
 ) {
-    @Before("@annotation(com.evehunt.evehunt.global.infra.aop.annotation.CheckLoginMember)")
+    @Before("@annotation(com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember)")
     fun checkEventMember(joinPoint: JoinPoint)
     {
         val method = (joinPoint.signature as MethodSignature).method
@@ -32,10 +32,8 @@ class MemberAOP(
                 val targetUsername = memberService.getMember(event.hostId!!).email
                 if(targetUsername != username)
                 {
-                    println("Throw!!")
                     throw UnAuthorizedAccessException(username)
                 }
-
             }
         }
     }

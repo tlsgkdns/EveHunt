@@ -1,15 +1,18 @@
 package com.evehunt.evehunt.domain.participateHistory.service
 
 import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
+import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateEditRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.global.common.PageRequest
 import com.evehunt.evehunt.global.common.PageResponse
 
 interface ParticipateHistoryService {
-    fun participateEvent(eventId: Long, memberEmail: String, participateRequest: ParticipateRequest): ParticipateResponse
-    fun dropEventParticipate(eventId: Long, memberEmail: String)
+    fun participateEvent(eventId: Long, username: String, participateRequest: ParticipateRequest): ParticipateResponse
+    fun dropEventParticipate(eventId: Long, username: String)
     fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse>
-    fun getParticipateHistoryByMember(pageRequest: PageRequest, memberEmail: String): PageResponse<ParticipateResponse>
+    fun getParticipateHistoryByMember(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse>
     fun getParticipateHistoryByEvent(eventId: Long): List<ParticipateResponse>
+    fun getParticipateHistory(eventId: Long, username: String): ParticipateResponse
+    fun editParticipateAnswer(eventId: Long, participateEditRequest: ParticipateEditRequest, username: String): ParticipateResponse
 }

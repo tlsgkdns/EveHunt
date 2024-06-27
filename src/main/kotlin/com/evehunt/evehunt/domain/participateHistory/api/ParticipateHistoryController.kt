@@ -1,11 +1,13 @@
 package com.evehunt.evehunt.domain.participateHistory.api
 
 import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
+import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateEditRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
 import com.evehunt.evehunt.global.common.PageRequest
 import com.evehunt.evehunt.global.common.PageResponse
+import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -42,17 +44,26 @@ class ParticipateHistoryController(
         }
     }
     @DeleteMapping("/events/{eventId}")
-    fun dropEvent(@PathVariable eventId: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<Unit>
+    fun dropParticipantEvent(@PathVariable eventId: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<Unit>
     {
         return participateHistoryService.dropEventParticipate(eventId, user.username).let {
             ResponseEntity.status(HttpStatus.NO_CONTENT).body(it)
         }
     }
+    @CheckEventLoginMember
     @PatchMapping("/events/{eventId}")
     fun setEventResult(@PathVariable eventId: Long, @RequestBody eventWinnerRequest: EventWinnerRequest):
             ResponseEntity<List<ParticipateResponse>>
     {
         return participateHistoryService.setEventResult(eventId, eventWinnerRequest).let {
+            ResponseEntity.status(HttpStatus.OK).body(it)
+        }
+    }
+    @PatchMapping("/{eventId}")
+    fun editEventAnswer(@PathVariable eventId: Long, @RequestBody editRequest: ParticipateEditRequest,
+                        @AuthenticationPrincipal user: UserDetails)
+    {
+        return participateHistoryService.editParticipateAnswer(eventId, editRequest, user.username).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }

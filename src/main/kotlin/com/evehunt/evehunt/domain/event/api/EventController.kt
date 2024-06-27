@@ -6,6 +6,7 @@ import com.evehunt.evehunt.domain.event.dto.EventResponse
 import com.evehunt.evehunt.domain.event.service.EventService
 import com.evehunt.evehunt.global.common.PageRequest
 import com.evehunt.evehunt.global.common.PageResponse
+import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -40,6 +41,7 @@ class EventController(
             ResponseEntity.status(HttpStatus.CREATED).body(it)
         }
     }
+    @CheckEventLoginMember
     @PatchMapping("/{eventId}")
     fun editEvent(@PathVariable eventId: Long, @RequestBody eventEditRequest: EventEditRequest)
     {
@@ -47,6 +49,7 @@ class EventController(
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
+    @CheckEventLoginMember
     @DeleteMapping("/{eventId}")
     fun closeEvent(@PathVariable eventId: Long): ResponseEntity<Long>
     {

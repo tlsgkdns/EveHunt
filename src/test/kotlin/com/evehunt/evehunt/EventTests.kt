@@ -247,4 +247,24 @@ class EventTests @Autowired constructor(
             .andExpect(MockMvcResultMatchers.status().isUnauthorized)
         eventService.getEvent(1L).title shouldNotBe eventEditRequest.title
     }
+    @Test
+    fun testUnAuthorizedPickWinner()
+    {
+        hostEvent()
+        val eventId = 1L
+        for(id in 1L .. 100L) participateEvent(id)
+        val winnerList:MutableList<Long> = mutableListOf()
+        for(id in 1L .. 100L step 2) winnerList.add(id)
+        val loginAnotherMemberRequest = MemberSignInRequest(
+            email = "3",
+            password = "3"
+        )
+        val jwt = memberService.signIn(loginAnotherMemberRequest).token
+        mockMvc.perform(
+            patch("/participate-history/events/${eventId}")
+                .header("Authorization", "Bearer $jwt")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(EventWinnerRequest(winnerList))))
+            .andExpect(MockMvcResultMatchers.status().isUnauthorized)
+    }
 }
