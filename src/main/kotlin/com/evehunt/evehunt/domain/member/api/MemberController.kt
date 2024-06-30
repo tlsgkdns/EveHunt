@@ -2,8 +2,13 @@ package com.evehunt.evehunt.domain.member.api
 
 import com.evehunt.evehunt.domain.member.dto.*
 import com.evehunt.evehunt.domain.member.service.MemberService
+import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
+import com.evehunt.evehunt.global.common.page.PageRequest
+import com.evehunt.evehunt.global.common.page.PageResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -44,5 +49,12 @@ class MemberController(
     {
         return memberService.withdrawMember(memberId)
             .let { ResponseEntity.status(HttpStatus.NOT_FOUND).build() }
+    }
+    @GetMapping("/{memberId}/events")
+    fun getParticipateHistoryByMember(@AuthenticationPrincipal user: UserDetails, pageRequest: PageRequest): ResponseEntity<PageResponse<ParticipateResponse>>
+    {
+        return memberService.getParticipatedEvents(pageRequest, user.username).let {
+            ResponseEntity.status(HttpStatus.OK).body(it)
+        }
     }
 }

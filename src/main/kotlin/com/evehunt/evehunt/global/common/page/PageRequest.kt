@@ -1,4 +1,4 @@
-package com.evehunt.evehunt.global.common
+package com.evehunt.evehunt.global.common.page
 
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable

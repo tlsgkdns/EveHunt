@@ -6,6 +6,7 @@ import com.evehunt.evehunt.domain.event.model.EventType
 import java.time.LocalDateTime
 
 data class EventResponse(
+    val id: Long?,
     val title: String,
     val description: String,
     val winMessage: String,
@@ -25,6 +26,7 @@ data class EventResponse(
         fun from(event: Event): EventResponse
         {
             return EventResponse(
+                id = event.id,
                 title = event.title,
                 description = event.description,
                 winMessage = event.winMessage,

@@ -3,22 +3,14 @@ package com.evehunt.evehunt.domain.event.service
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
-import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 
-interface EventService {
+interface EventEntityService {
     fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse
     fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse
     fun getEvent(eventId: Long): EventResponse
     fun getEvents(pageRequest: PageRequest, keyword: String?): PageResponse<EventResponse>
     fun closeEvent(eventId: Long): Long
     fun setExpiredEventsClose(): List<EventResponse>
-    fun participateEvent(eventId: Long, username: String, participateRequest: ParticipateRequest): ParticipateResponse
-    fun resignEventParticipate(eventId: Long, username: String)
-    fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse>
-    fun getParticipateHistories(eventId: Long): List<ParticipateResponse>
-    fun getParticipateHistory(eventId: Long, username: String): ParticipateResponse
 }

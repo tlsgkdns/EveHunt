@@ -1,70 +1,57 @@
 package com.evehunt.evehunt.domain.member.service
 
-import com.evehunt.evehunt.domain.image.model.Image
+import com.evehunt.evehunt.domain.mail.dto.MailRequest
+import com.evehunt.evehunt.domain.mail.service.MailService
 import com.evehunt.evehunt.domain.member.dto.*
-import com.evehunt.evehunt.domain.member.model.Member
-import com.evehunt.evehunt.domain.member.repository.MemberRepository
-import com.evehunt.evehunt.global.exception.exception.AlreadyExistModelException
-import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
-import com.evehunt.evehunt.global.infra.security.TokenProvider
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.crypto.password.PasswordEncoder
+import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
+import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
+import com.evehunt.evehunt.global.common.page.PageRequest
+import com.evehunt.evehunt.global.common.page.PageResponse
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
 class MemberServiceImpl(
-    private val memberRepository: MemberRepository,
-    private val encoder: PasswordEncoder,
-    private val tokenProvider: TokenProvider
+    private val memberService: MemberEntityService,
+    private val participateHistoryService: ParticipateHistoryService,
+    private val mailService: MailService
 ): MemberService {
-    private fun getValidatedMember(id: Long): Member
-    {
-        return memberRepository.findByIdOrNull(id) ?: throw ModelNotFoundException("Member", id.toString())
-    }
-    private fun getValidatedMember(email: String): Member
-    {
-        return memberRepository.findMemberByEmail(email) ?: throw ModelNotFoundException("Member", email)
-    }
-    @Transactional
+    private final val welcomeTitleMessage = "가입을 환영합니다!"
+    private final fun welcomeContentMessage(name: String) = "${name}님 가입을 환영합니다!"
+
+    private final val withdrawTitleMessage = "탈퇴가 완료되었습니다."
+    private final fun withdrawContentMessage(name: String) = "${name}님의 탈퇴가 무사히 완료되었습니다. 다시 만날 날을 기대하겠습니다."
+
     override fun registerMember(memberRegisterRequest: MemberRegisterRequest): MemberResponse {
-        if(memberRepository.existsByEmail(memberRegisterRequest.email))
-            throw AlreadyExistModelException(memberRegisterRequest.email)
-        val member = memberRegisterRequest.to(encoder)
-            .let { memberRepository.save(it) }
-        return member.let { MemberResponse.from(it) }
+        val member = memberService.registerMember(memberRegisterRequest)
+        mailService.sendMail(member.email, MailRequest(welcomeTitleMessage, welcomeContentMessage(member.name)))
+        return member
     }
 
     override fun signIn(memberSignInRequest: MemberSignInRequest): MemberSignInResponse {
-        val member = getValidatedMember(memberSignInRequest.email)
-            .takeIf { encoder.matches(memberSignInRequest.password, it.password) }
-            ?: throw IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.")
-        val token = tokenProvider.createToken("${member.email}:${member.name}")
-        return MemberSignInResponse(member.email, token)
+        return memberService.signIn(memberSignInRequest)
     }
 
-    @Transactional
-    override fun getMember(memberId: Long): MemberResponse {
-        return getValidatedMember(memberId).let { MemberResponse.from(it) }
+    override fun getMember(memberId: Long?): MemberResponse {
+        return memberService.getMember(memberId)
     }
 
-    @Transactional
     override fun editMember(memberId: Long, memberEditRequest: MemberEditRequest): MemberResponse {
-        val member = getValidatedMember(memberId)
-        val name = memberEditRequest.newName ?: member.name
-        val profileImage = memberEditRequest.newProfileImage.let { Image.from(it) } ?: member.profileImage
-        val editedMember = member.apply { this.name = name }.apply { this.profileImage = profileImage }
-        return memberRepository.save(editedMember).let { MemberResponse.from(it) }
+        return memberService.editMember(memberId, memberEditRequest)
     }
 
-    @Transactional
     override fun withdrawMember(memberId: Long): Long {
-        val member = getValidatedMember(memberId)
-        memberRepository.delete(member)
-        return memberId
+        val email = getMember(memberId).email
+        val name = getMember(memberId).name
+        val ret = memberService.withdrawMember(memberId)
+        mailService.sendMail(email, MailRequest(withdrawTitleMessage, withdrawContentMessage(name)))
+        return ret
     }
 
     override fun deleteAllMember() {
-        memberRepository.deleteAll()
+        return memberService.deleteAllMember()
+    }
+
+    override fun getParticipatedEvents(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse> {
+        return participateHistoryService.getParticipateHistoryByMember(pageRequest, username)
     }
 }

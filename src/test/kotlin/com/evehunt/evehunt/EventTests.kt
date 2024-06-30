@@ -43,14 +43,16 @@ class EventTests @Autowired constructor(
     val participateHistoryService: ParticipateHistoryService
 ) {
     val objectMapper: ObjectMapper = ObjectMapper().registerModules(JavaTimeModule())
+
     companion object
     {
+        private const val memberNum = 1000
         @JvmStatic
         @BeforeAll
         fun registerMember(@Autowired memberService: MemberService)
         {
             memberService.deleteAllMember()
-            for (i in 1..100) {
+            for (i in 1..memberNum) {
                 val email = i.toString()
                 val memberRegisterRequest = MemberRegisterRequest(
                     email = email,
@@ -72,11 +74,10 @@ class EventTests @Autowired constructor(
             closeAt = LocalDateTime.now().plusDays(2),
             winMessage = "Winner Winner Chicken Dinner",
             question = "Do you like me?",
-            capacity = 100,
+            capacity = 700,
             eventType = EventType.DRAWLOT,
         )
         eventService.hostEvent(eventRequest, "1").hostId shouldBe 1L
-
     }
     @Test
     fun getEvent()
@@ -127,11 +128,11 @@ class EventTests @Autowired constructor(
         val eventId = 1L
         val jwt = memberService.signIn(loginRequest).token
         val participateJson = objectMapper.writeValueAsString(ParticipateRequest("I am here!"))
-        mockMvc.perform(post("/participate-history/events/${eventId}")
+        mockMvc.perform(post("/events/${eventId}/participants")
             .header("Authorization", "Bearer $jwt")
             .contentType(MediaType.APPLICATION_JSON)
             .content(participateJson))
-        return participateHistoryService.getParticipateHistoryByEvent(eventId)
+        return eventService.getParticipateHistories(eventId)
     }
     @Test
     fun testParticipateEvent()
@@ -149,11 +150,11 @@ class EventTests @Autowired constructor(
     {
         hostEvent()
         val eventId = 1L
-        for(id in 1L .. 100L) participateEvent(id)
+        for(id in 1L .. memberNum) participateEvent(id)
         val winnerList:MutableList<Long> = mutableListOf()
-        for(id in 1L .. 100L step 2) winnerList.add(id)
-        val list = participateHistoryService.setEventResult(eventId, EventWinnerRequest(winnerList))
-        for(id in 1 .. 100)
+        for(id in 1L .. memberNum step 2) winnerList.add(id)
+        val list = eventService.setEventResult(eventId, EventWinnerRequest(winnerList))
+        for(id in 1 .. memberNum)
         {
             if(id % 2 > 0) list[id - 1].status shouldBe EventParticipateStatus.WIN
             else list[id - 1].status shouldBe EventParticipateStatus.LOSE
@@ -164,7 +165,7 @@ class EventTests @Autowired constructor(
     fun testMultiThreadEnvironment()
     {
         hostEvent()
-        val threadCount = 100
+        val threadCount = memberNum
         val executorService = Executors.newFixedThreadPool(32)
         val countDownLatch = CountDownLatch(threadCount)
 
@@ -179,7 +180,7 @@ class EventTests @Autowired constructor(
             val participateJson = objectMapper.writeValueAsString(ParticipateRequest("I am here!"))
             executorService.execute(){
                 try{
-                    mockMvc.perform(post("/participate-history/events/${eventId}")
+                    mockMvc.perform(post("/events/${eventId}/participants")
                         .header("Authorization", "Bearer $jwt")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(participateJson))
@@ -190,7 +191,7 @@ class EventTests @Autowired constructor(
         }
         countDownLatch.await()
         val list = participateHistoryService.getParticipateHistoryByEvent(1L)
-        list.size shouldBe 70
+        list.size shouldBe 700
     }
     @Test
     fun testExpiredEvent()
@@ -216,10 +217,13 @@ class EventTests @Autowired constructor(
             .contentType(MediaType.APPLICATION_JSON)
             .content(eventJson))
             .andExpect(MockMvcResultMatchers.status().isOk)
+        for (id in 1 until memberNum) participateEvent(id.toLong())
         Thread.sleep(5001)
         eventService.getEvent(1L).status shouldBe EventStatus.CLOSED
-        participateEvent(1L)
-        participateHistoryService.getParticipateHistoryByEvent(1L).size shouldBe 0
+        participateEvent(memberNum.toLong())
+        val list = participateHistoryService.getParticipateHistoryByEvent(1L)
+        list.size shouldBe memberNum - 1
+        list.forEach { it.status shouldBe EventParticipateStatus.WAIT_RESULT }
     }
 
     @Test
@@ -252,16 +256,16 @@ class EventTests @Autowired constructor(
     {
         hostEvent()
         val eventId = 1L
-        for(id in 1L .. 100L) participateEvent(id)
+        for(id in 2L .. memberNum) participateEvent(id)
         val winnerList:MutableList<Long> = mutableListOf()
-        for(id in 1L .. 100L step 2) winnerList.add(id)
+        for(id in 2L .. memberNum step 2) winnerList.add(id)
         val loginAnotherMemberRequest = MemberSignInRequest(
             email = "3",
             password = "3"
         )
         val jwt = memberService.signIn(loginAnotherMemberRequest).token
         mockMvc.perform(
-            patch("/participate-history/events/${eventId}")
+            patch("/events/${eventId}/participants/result")
                 .header("Authorization", "Bearer $jwt")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(EventWinnerRequest(winnerList))))

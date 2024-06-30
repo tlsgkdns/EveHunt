@@ -5,8 +5,8 @@ import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateEditRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
-import com.evehunt.evehunt.global.common.PageRequest
-import com.evehunt.evehunt.global.common.PageResponse
+import com.evehunt.evehunt.global.common.page.PageRequest
+import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/participate-history")
+@RequestMapping("/events/{eventId}/participants")
 class ParticipateHistoryController(
     private val participateHistoryService: ParticipateHistoryService
 ) {
-    @GetMapping("/events/{eventId}")
+    @GetMapping()
     fun getParticipateHistoryByEvent(@PathVariable eventId: Long, @AuthenticationPrincipal user: UserDetails):
             ResponseEntity<List<ParticipateResponse>>
     {
@@ -34,7 +34,7 @@ class ParticipateHistoryController(
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
-    @PostMapping("/events/{eventId}")
+    @PostMapping()
     fun participateEvent(@PathVariable eventId: Long, @AuthenticationPrincipal user: UserDetails,
                          @RequestBody participateRequest: ParticipateRequest):
             ResponseEntity<ParticipateResponse>
@@ -43,15 +43,15 @@ class ParticipateHistoryController(
             ResponseEntity.status(HttpStatus.CREATED).body(it)
         }
     }
-    @DeleteMapping("/events/{eventId}")
+    @DeleteMapping()
     fun dropParticipantEvent(@PathVariable eventId: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<Unit>
     {
-        return participateHistoryService.dropEventParticipate(eventId, user.username).let {
+        return participateHistoryService.resignEventParticipate(eventId, user.username).let {
             ResponseEntity.status(HttpStatus.NO_CONTENT).body(it)
         }
     }
     @CheckEventLoginMember
-    @PatchMapping("/events/{eventId}")
+    @PatchMapping("/result")
     fun setEventResult(@PathVariable eventId: Long, @RequestBody eventWinnerRequest: EventWinnerRequest):
             ResponseEntity<List<ParticipateResponse>>
     {
@@ -59,18 +59,11 @@ class ParticipateHistoryController(
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
-    @PatchMapping("/{eventId}")
+    @PatchMapping()
     fun editEventAnswer(@PathVariable eventId: Long, @RequestBody editRequest: ParticipateEditRequest,
                         @AuthenticationPrincipal user: UserDetails)
     {
         return participateHistoryService.editParticipateAnswer(eventId, editRequest, user.username).let {
-            ResponseEntity.status(HttpStatus.OK).body(it)
-        }
-    }
-    @GetMapping("/members")
-    fun getParticipateHistoryByMember(@AuthenticationPrincipal user: UserDetails, pageRequest: PageRequest): ResponseEntity<PageResponse<ParticipateResponse>>
-    {
-        return participateHistoryService.getParticipateHistoryByMember(pageRequest, user.username).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }

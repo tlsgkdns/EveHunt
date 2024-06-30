@@ -1,5 +1,5 @@
 package com.evehunt.evehunt.domain.participateHistory.model
 
 enum class EventParticipateStatus {
-    PARTICIPATING, WAITRESULT, WIN, LOSE
+    PARTICIPATING, RESIGN, WIN, LOSE, WAIT_RESULT
 }

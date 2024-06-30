@@ -1,5 +1,6 @@
 package com.evehunt.evehunt.global.infra.scheduler
 
+
 import com.evehunt.evehunt.domain.event.service.EventService
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled

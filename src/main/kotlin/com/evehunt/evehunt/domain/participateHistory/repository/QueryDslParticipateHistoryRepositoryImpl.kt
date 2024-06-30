@@ -21,7 +21,8 @@ class QueryDslParticipateHistoryRepositoryImpl: QueryDslParticipateHistoryReposi
             .fetchOne()
     }
 
-    override fun getParticipantsByEvent(eventId: Long): List<ParticipateHistory> {
+    override fun getParticipantsByEvent(eventId: Long?): List<ParticipateHistory> {
+        eventId ?: return listOf()
         return queryFactory.selectFrom(participateHistory)
             .where(participateHistory.event.id.eq(eventId))
             .fetch()

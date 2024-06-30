@@ -1,4 +1,4 @@
-package com.evehunt.evehunt.global.common
+package com.evehunt.evehunt.global.common.page
 
 import kotlin.math.ceil
 import kotlin.math.min

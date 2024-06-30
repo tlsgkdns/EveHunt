@@ -7,7 +7,7 @@ data class ParticipateResponse(
     val eventId: Long?,
     val memberId: Long?,
     val answer: String,
-    val status: EventParticipateStatus
+    var status: EventParticipateStatus
 )
 {
     companion object

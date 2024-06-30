@@ -8,12 +8,13 @@ import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateEditRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
+import com.evehunt.evehunt.domain.participateHistory.model.EventParticipateStatus
 import com.evehunt.evehunt.domain.participateHistory.model.ParticipateHistory
 import com.evehunt.evehunt.domain.participateHistory.model.strategy.PickWinnerBinarySearch
 import com.evehunt.evehunt.domain.participateHistory.model.strategy.PickWinnerStrategy
 import com.evehunt.evehunt.domain.participateHistory.repository.ParticipateHistoryRepository
-import com.evehunt.evehunt.global.common.PageRequest
-import com.evehunt.evehunt.global.common.PageResponse
+import com.evehunt.evehunt.global.common.page.PageRequest
+import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.*
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -72,8 +73,15 @@ class ParticipateHistoryServiceImpl(
         }
     }
 
+    override fun setParticipantsStatusWait(eventId: Long?): List<ParticipateResponse> {
+        val list = participateHistoryRepository.getParticipantsByEvent(eventId)
+        list.forEach { it.status = EventParticipateStatus.WAIT_RESULT }
+        list.forEach { participateHistoryRepository.save(it) }
+        return list.map { ParticipateResponse.from(it) }
+    }
+
     @Transactional
-    override fun dropEventParticipate(eventId: Long, username: String) {
+    override fun resignEventParticipate(eventId: Long, username: String) {
         val participateHistory = getExistParticipateHistory(eventId, username)
         participateHistoryRepository.delete(participateHistory)
     }
@@ -92,7 +100,8 @@ class ParticipateHistoryServiceImpl(
         return PageResponse.of(pageRequest, content, pages.totalElements.toInt())
     }
 
-    override fun getParticipateHistoryByEvent(eventId: Long): List<ParticipateResponse> {
-        return participateHistoryRepository.getParticipantsByEvent(eventId).map { ParticipateResponse.from(it) }
+    override fun getParticipateHistoryByEvent(eventId: Long?): List<ParticipateResponse> {
+        return participateHistoryRepository.getParticipantsByEvent(eventId)
+            .map { ParticipateResponse.from(it) }
     }
 }

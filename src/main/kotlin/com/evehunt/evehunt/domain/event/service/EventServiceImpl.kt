@@ -3,77 +3,107 @@ package com.evehunt.evehunt.domain.event.service
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
-import com.evehunt.evehunt.domain.event.model.Event
-import com.evehunt.evehunt.domain.event.model.EventStatus
-import com.evehunt.evehunt.domain.event.repository.EventRepository
-import com.evehunt.evehunt.domain.image.model.Image
-import com.evehunt.evehunt.domain.member.repository.MemberRepository
-import com.evehunt.evehunt.global.common.PageRequest
-import com.evehunt.evehunt.global.common.PageResponse
-import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
-import org.springframework.data.repository.findByIdOrNull
+import com.evehunt.evehunt.domain.mail.dto.MailRequest
+import com.evehunt.evehunt.domain.mail.service.MailService
+import com.evehunt.evehunt.domain.member.service.MemberService
+import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
+import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
+import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
+import com.evehunt.evehunt.domain.participateHistory.model.EventParticipateStatus
+import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
+import com.evehunt.evehunt.global.common.page.PageRequest
+import com.evehunt.evehunt.global.common.page.PageResponse
+import com.evehunt.evehunt.global.exception.exception.FullCapacityException
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
-import java.time.ZoneId
 
 @Service
 class EventServiceImpl(
-    private val eventRepository: EventRepository,
-    private val memberRepository: MemberRepository
+    private val eventEntityService: EventEntityService,
+    private val memberService: MemberService,
+    private val mailService: MailService,
+    private val participateHistoryService: ParticipateHistoryService
 ): EventService {
-    private fun getValidatedEvent(eventId: Long): Event
-    {
-        return eventRepository.findByIdOrNull(eventId) ?: throw ModelNotFoundException("Event", eventId.toString())
-    }
+    private final val resultTitleMessage = "이벤트 결과 안내드립니다."
+    private final val eventHostTitleMessage = "이벤트를 성공적으로 개최했습니다."
+    private final val eventParticipateSuccessTitleMessage = "이벤트에 성공적으로 참여하였습니다."
+    private final val eventParticipateFailTitleMessage = "이벤트에 참여하지 못했습니다."
+    private final fun resultLoseMessage(title: String) = "${title}에 당첨되지 않았습니다."
+    private final fun eventHostContentMessage(title: String) = "${title}를 성공적으로 개최하였습니다."
+    private final fun eventParticipateSuccessMessage(title: String) = "${title}에 성공적으로 참여하였습니다."
+    private final fun eventParticipateFailMessage(title: String) = "${title}에 참여하지 못했습니다."
 
-    @Transactional
+    private fun getEmail(memberId: Long?): String
+        = memberService.getMember(memberId).email
     override fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse {
-        val event = getValidatedEvent(eventId)
-        event.title = eventEditRequest.title ?: event.title
-        event.winMessage = eventEditRequest.winMessage ?: event.winMessage
-        event.image = Image.from(eventEditRequest.eventImage)
-        event.description = eventEditRequest.description ?: event.description
-        event.closeAt = eventEditRequest.closeAt?.atZone(ZoneId.of("Asia/Seoul")) ?: event.closeAt
-        event.capacity = eventEditRequest.capacity ?: event.capacity
-        return eventRepository.save(event).let { EventResponse.from(it) }
+        return eventEntityService.editEvent(eventId, eventEditRequest)
     }
 
-    @Transactional
     override fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse {
-        val member = memberRepository.findMemberByEmail(username)
-        return eventRepository.save(eventHostRequest.to(member)).let {
-            EventResponse.from(it)
-        }
+        val event = eventEntityService.hostEvent(eventHostRequest, username)
+        mailService.sendMail(username, MailRequest(eventHostTitleMessage, eventHostContentMessage(event.title)))
+        return event
     }
 
-    @Transactional
     override fun getEvent(eventId: Long): EventResponse {
-        return getValidatedEvent(eventId).let {
-            EventResponse.from(it)
-        }
+        return eventEntityService.getEvent(eventId)
     }
 
-    @Transactional
     override fun getEvents(pageRequest: PageRequest, keyword: String?): PageResponse<EventResponse> {
-        val eventPages = eventRepository.searchEvents(pageRequest.getPageable(), keyword)
-        val content = eventPages.content.map { EventResponse.from(it) }
-        return PageResponse.of(pageRequest, content, eventPages.totalElements.toInt())
+        return eventEntityService.getEvents(pageRequest, keyword)
     }
 
-    @Transactional
     override fun closeEvent(eventId: Long): Long {
-        val event = getValidatedEvent(eventId)
-        eventRepository.delete(event)
-        return eventId
+        return eventEntityService.closeEvent(eventId)
     }
 
-    @Transactional
-    override fun setExpiredEventsClose() {
-        val eventList = eventRepository.getExpiredEvents()
-        for (event in eventList)
-        {
-            event.eventStatus = EventStatus.CLOSED
-            eventRepository.save(event)
-        }
+    override fun setExpiredEventsClose(): List<EventResponse> {
+        val expiredEvents = eventEntityService.setExpiredEventsClose()
+        expiredEvents.forEach { participateHistoryService.setParticipantsStatusWait(it.id) }
+        return expiredEvents
     }
+
+    override fun participateEvent(
+        eventId: Long,
+        username: String,
+        participateRequest: ParticipateRequest
+    ): ParticipateResponse {
+        lateinit var participateResponse: ParticipateResponse
+        val event = getEvent(eventId)
+        try {
+            participateResponse = participateHistoryService.participateEvent(eventId, username, participateRequest)
+        } catch (e: FullCapacityException)
+        {
+            mailService.sendMail(getEmail(participateResponse.memberId),
+                MailRequest(eventParticipateFailTitleMessage, eventParticipateFailMessage(event.title)))
+        }
+        mailService.sendMail(getEmail(participateResponse.memberId),
+            MailRequest(eventParticipateSuccessTitleMessage, eventParticipateSuccessMessage(event.title)))
+        return participateResponse
+    }
+
+    override fun resignEventParticipate(eventId: Long, username: String) {
+        participateHistoryService.resignEventParticipate(eventId, username)
+    }
+
+    override fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
+        val list = participateHistoryService.setEventResult(eventId, eventWinnerRequest)
+        val event = eventEntityService.getEvent(eventId)
+        for(participant in list)
+        {
+            val email = memberService.getMember(participant.memberId!!).email
+            val resultMessage = if(participant.status == EventParticipateStatus.WIN) event.winMessage
+                else resultLoseMessage(event.title)
+            mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
+        }
+        return list
+    }
+
+    override fun getParticipateHistories(eventId: Long): List<ParticipateResponse> {
+        return participateHistoryService.getParticipateHistoryByEvent(eventId)
+    }
+
+    override fun getParticipateHistory(eventId: Long, username: String): ParticipateResponse {
+        return participateHistoryService.getParticipateHistory(eventId, username)
+    }
+
 }
