@@ -16,7 +16,7 @@ import java.nio.file.Paths
 import java.util.*
 
 @RestController
-@RequestMapping("/images")
+@RequestMapping("/api/images")
 class ImageController(
     @Value("\${org.eveHunt.upload.path}")
     val uploadPath: String

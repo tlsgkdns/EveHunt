@@ -48,6 +48,10 @@ class MemberEntityServiceImpl(
         return getExistMember(memberId).let { MemberResponse.from(it) }
     }
 
+    override fun getMember(username: String): MemberResponse {
+        return getExistMember(username).let { MemberResponse.from(it) }
+    }
+
     @Transactional
     override fun editMember(memberId: Long, memberEditRequest: MemberEditRequest): MemberResponse {
         val member = getExistMember(memberId)

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/events/{eventId}/participants")
+@RequestMapping("/api/events/{eventId}/participants")
 class ParticipateHistoryController(
     private val participateHistoryService: ParticipateHistoryService
 ) {

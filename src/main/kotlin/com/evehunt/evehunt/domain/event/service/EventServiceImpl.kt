@@ -11,17 +11,22 @@ import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.model.EventParticipateStatus
 import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
+import com.evehunt.evehunt.domain.tag.dto.TagAddRequest
+import com.evehunt.evehunt.domain.tag.dto.TagResponse
+import com.evehunt.evehunt.domain.tag.service.TagService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.FullCapacityException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class EventServiceImpl(
     private val eventEntityService: EventEntityService,
     private val memberService: MemberService,
     private val mailService: MailService,
-    private val participateHistoryService: ParticipateHistoryService
+    private val participateHistoryService: ParticipateHistoryService,
+    private val tagService: TagService
 ): EventService {
     private final val resultTitleMessage = "이벤트 결과 안내드립니다."
     private final val eventHostTitleMessage = "이벤트를 성공적으로 개최했습니다."
@@ -38,9 +43,14 @@ class EventServiceImpl(
         return eventEntityService.editEvent(eventId, eventEditRequest)
     }
 
+    @Transactional
     override fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse {
         val event = eventEntityService.hostEvent(eventHostRequest, username)
-        mailService.sendMail(username, MailRequest(eventHostTitleMessage, eventHostContentMessage(event.title)))
+        // mailService.sendMail(username, MailRequest(eventHostTitleMessage, eventHostContentMessage(event.title)))
+        val tagList = eventHostRequest.tagAddRequests
+        tagList?.forEach {
+            tagService.addTag(event.id!!, it)
+        }
         return event
     }
 
@@ -62,6 +72,7 @@ class EventServiceImpl(
         return expiredEvents
     }
 
+    @Transactional
     override fun participateEvent(
         eventId: Long,
         username: String,
@@ -81,10 +92,12 @@ class EventServiceImpl(
         return participateResponse
     }
 
+    @Transactional
     override fun resignEventParticipate(eventId: Long, username: String) {
         participateHistoryService.resignEventParticipate(eventId, username)
     }
 
+    @Transactional
     override fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
         val list = participateHistoryService.setEventResult(eventId, eventWinnerRequest)
         val event = eventEntityService.getEvent(eventId)
@@ -106,4 +119,13 @@ class EventServiceImpl(
         return participateHistoryService.getParticipateHistory(eventId, username)
     }
 
+    override fun getTags(eventId: Long): List<TagResponse> {
+        return tagService.getTags(eventId)
+    }
+    override fun addTag(eventId: Long, tagAddRequest: TagAddRequest): TagResponse {
+        return tagService.addTag(eventId, tagAddRequest)
+    }
+    override fun deleteTag(eventId: Long, tagId: Long) {
+        return tagService.deleteTag(eventId, tagId)
+    }
 }

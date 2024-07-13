@@ -6,6 +6,8 @@ import com.evehunt.evehunt.domain.event.dto.EventResponse
 import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
+import com.evehunt.evehunt.domain.tag.dto.TagAddRequest
+import com.evehunt.evehunt.domain.tag.dto.TagResponse
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 
@@ -21,4 +23,10 @@ interface EventService {
     fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse>
     fun getParticipateHistories(eventId: Long): List<ParticipateResponse>
     fun getParticipateHistory(eventId: Long, username: String): ParticipateResponse
+
+    fun getTags(eventId: Long): List<TagResponse>
+
+    fun addTag(eventId: Long, tagAddRequest: TagAddRequest): TagResponse
+
+    fun deleteTag(eventId: Long, tagId: Long)
 }

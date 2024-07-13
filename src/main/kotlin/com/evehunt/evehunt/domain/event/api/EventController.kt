@@ -3,7 +3,8 @@ package com.evehunt.evehunt.domain.event.api
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
-import com.evehunt.evehunt.domain.event.service.EventEntityService
+import com.evehunt.evehunt.domain.event.service.EventService
+import com.evehunt.evehunt.domain.tag.dto.TagResponse
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
@@ -15,28 +16,28 @@ import org.springframework.web.bind.annotation.*
 
 
 @RestController
-@RequestMapping("/events")
+@RequestMapping("/api/events")
 class EventController(
-    private val eventEntityService: EventEntityService
+    private val eventService: EventService
 ) {
     @GetMapping("/{eventId}")
     fun getEvent(@PathVariable eventId: Long): ResponseEntity<EventResponse>
     {
-        return eventEntityService.getEvent(eventId).let {
+        return eventService.getEvent(eventId).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
     @GetMapping()
     fun getEvents(@RequestBody pageRequest: PageRequest, keyword: String?): ResponseEntity<PageResponse<EventResponse>>
     {
-        return eventEntityService.getEvents(pageRequest, keyword).let {
+        return eventService.getEvents(pageRequest, keyword).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
     @PostMapping()
-    fun hostEvent(@RequestBody eventHostRequest: EventHostRequest, @AuthenticationPrincipal userDetails: UserDetails)
+    fun hostEvent(@RequestBody eventHostRequest: EventHostRequest, @AuthenticationPrincipal userDetails: UserDetails): ResponseEntity<EventResponse>
     {
-        return eventEntityService.hostEvent(eventHostRequest, userDetails.username).let {
+        return eventService.hostEvent(eventHostRequest, userDetails.username).let {
             ResponseEntity.status(HttpStatus.CREATED).body(it)
         }
     }
@@ -44,7 +45,7 @@ class EventController(
     @PatchMapping("/{eventId}")
     fun editEvent(@PathVariable eventId: Long, @RequestBody eventEditRequest: EventEditRequest)
     {
-        return eventEntityService.editEvent(eventId, eventEditRequest).let {
+        return eventService.editEvent(eventId, eventEditRequest).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
@@ -52,8 +53,16 @@ class EventController(
     @DeleteMapping("/{eventId}")
     fun closeEvent(@PathVariable eventId: Long): ResponseEntity<Long>
     {
-        return eventEntityService.closeEvent(eventId).let {
+        return eventService.closeEvent(eventId).let {
             ResponseEntity.status(HttpStatus.NO_CONTENT).body(it)
+        }
+    }
+
+    @GetMapping("/{eventId}/tags")
+    fun getTags(@PathVariable eventId: Long): ResponseEntity<List<TagResponse>>
+    {
+        return eventService.getTags(eventId).let {
+            ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
 }

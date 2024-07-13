@@ -6,15 +6,20 @@ import com.evehunt.evehunt.global.infra.querydsl.QueryDslSupport
 
 class QueryDslTagRepositoryImpl: QueryDslSupport(), QueryDslTagRepository {
     private val tag = QTag.tag
-    override fun getTagsByEvent(eventId: Long): List<Tag> {
+    override fun getTagsByEvent(eventId: Long?): List<Tag> {
         return queryFactory.selectFrom(tag)
             .where(tag.event.id.eq(eventId))
             .fetch()
     }
-
-    override fun deleteTagsByEvent(eventId: Long) {
+    override fun deleteTagsByEvent(eventId: Long?) {
         queryFactory.delete(tag)
             .where(tag.event.id.eq(eventId))
             .execute()
+    }
+    override fun getCountOfTags(tagName: String): Int {
+        return queryFactory.selectFrom(tag)
+            .where(tag.tagName.eq(tagName))
+            .fetch()
+            .size
     }
 }

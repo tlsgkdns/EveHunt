@@ -22,25 +22,25 @@ class TagServiceImpl(
 ): TagService{
 
 
-    private fun getExistEvent(eventId: Long): Event
+    private fun getExistEvent(eventId: Long?): Event
     {
         return eventRepository.findByIdOrNull(eventId)
             ?: throw ModelNotFoundException("Event", eventId.toString())
     }
-    private fun getExistTag(tagId: Long): Tag
+    private fun getExistTag(tagId: Long?): Tag
     {
         return tagRepository.findByIdOrNull(tagId)
             ?: throw ModelNotFoundException("Tag", tagId.toString())
     }
     @Transactional
-    override fun getTags(eventId: Long): List<TagResponse> {
+    override fun getTags(eventId: Long?): List<TagResponse> {
         return tagRepository.getTagsByEvent(eventId).map {
             TagResponse.from(it)
         }
     }
 
     @Transactional
-    override fun addTag(eventId: Long, tagAddRequest: TagAddRequest): TagResponse {
+    override fun addTag(eventId: Long?, tagAddRequest: TagAddRequest): TagResponse {
         val event = getExistEvent(eventId)
         if(getTags(eventId).size >= tagCapacity) throw FullCapacityException("Tag", eventId.toString(), tagCapacity)
         val tag = tagRepository.save(tagAddRequest.to(event))
@@ -48,13 +48,13 @@ class TagServiceImpl(
     }
 
     @Transactional
-    override fun deleteTags(eventId: Long)
+    override fun deleteTags(eventId: Long?)
     {
         tagRepository.deleteTagsByEvent(eventId)
     }
 
     @Transactional
-    override fun deleteTag(eventId: Long, tagId: Long) {
+    override fun deleteTag(eventId: Long?, tagId: Long?) {
         getExistEvent(eventId)
         val tag = getExistTag(tagId)
         tagRepository.delete(tag)

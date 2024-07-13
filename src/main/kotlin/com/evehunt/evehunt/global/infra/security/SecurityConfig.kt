@@ -10,6 +10,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +25,7 @@ class SecurityConfig(
     fun passwordEncoder() = BCryptPasswordEncoder()
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain = http
+        .cors {  }
         .csrf { it.disable() }
         .authorizeHttpRequests{ requests ->
             requests.anyRequest().permitAll()
@@ -32,4 +36,16 @@ class SecurityConfig(
             it.authenticationEntryPoint(authenticationEntryPoint)
         }
         .build()!!
+    @Bean
+    fun corsConfigurationSource(): CorsConfigurationSource
+    {
+        val configuration =  CorsConfiguration()
+        configuration.allowedOrigins = listOf("http://localhost:3006")
+        configuration.addAllowedHeader("*")
+        configuration.addAllowedMethod("*")
+        configuration.allowCredentials = true
+        val source = UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/**", configuration)
+        return source
+    }
 }
