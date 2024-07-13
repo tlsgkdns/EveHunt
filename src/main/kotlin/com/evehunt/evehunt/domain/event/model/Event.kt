@@ -10,14 +10,13 @@ import java.time.ZonedDateTime
 class Event(
     var title: String,
     var description: String,
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     var image: Image?,
     var capacity: Int,
     var eventStatus: EventStatus,
     var winMessage: String,
     var question: String?,
     var closeAt: ZonedDateTime,
-    var eventType: EventType,
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     var host: Member? = null
 ): BaseTimeEntity()

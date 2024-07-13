@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/members")
+@RequestMapping("/api/members")
 class MemberController(
     private val memberService: MemberService
 ) {
@@ -22,7 +22,18 @@ class MemberController(
         return memberService.getMember(memberId)
             .let { ResponseEntity.status(HttpStatus.OK).body(it) }
     }
-
+    @GetMapping()
+    fun getLoginMember(@AuthenticationPrincipal userDetails: UserDetails): ResponseEntity<MemberResponse>
+    {
+        return memberService.getMember(userDetails.username)
+            .let { ResponseEntity.status(HttpStatus.OK).body(it) }
+    }
+    @GetMapping("/username/{username}")
+    fun getMember(@PathVariable username: String): ResponseEntity<MemberResponse>
+    {
+        return memberService.getMember(username)
+            .let { ResponseEntity.status(HttpStatus.OK).body(it) }
+    }
     @PostMapping("/signUp")
     fun registerMember(@RequestBody memberRegisterRequest: MemberRegisterRequest): ResponseEntity<MemberResponse>
     {
@@ -50,11 +61,16 @@ class MemberController(
         return memberService.withdrawMember(memberId)
             .let { ResponseEntity.status(HttpStatus.NOT_FOUND).build() }
     }
-    @GetMapping("/{memberId}/events")
+    @GetMapping("/events")
     fun getParticipateHistoryByMember(@AuthenticationPrincipal user: UserDetails, pageRequest: PageRequest): ResponseEntity<PageResponse<ParticipateResponse>>
     {
         return memberService.getParticipatedEvents(pageRequest, user.username).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
+    }
+    @GetMapping("/email/available")
+    fun checkEmailAvailability(email: String)
+    {
+
     }
 }

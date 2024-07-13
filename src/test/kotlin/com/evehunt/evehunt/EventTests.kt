@@ -3,7 +3,6 @@ package com.evehunt.evehunt
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.model.EventStatus
-import com.evehunt.evehunt.domain.event.model.EventType
 import com.evehunt.evehunt.domain.event.service.EventService
 import com.evehunt.evehunt.domain.member.dto.MemberRegisterRequest
 import com.evehunt.evehunt.domain.member.dto.MemberSignInRequest
@@ -75,7 +74,7 @@ class EventTests @Autowired constructor(
             winMessage = "Winner Winner Chicken Dinner",
             question = "Do you like me?",
             capacity = 700,
-            eventType = EventType.DRAWLOT,
+            tagAddRequests = null
         )
         eventService.hostEvent(eventRequest, "1").hostId shouldBe 1L
     }
@@ -204,7 +203,7 @@ class EventTests @Autowired constructor(
             winMessage = "Winner Winner Chicken Dinner",
             question = "Do you like me?",
             capacity = 700,
-            eventType = EventType.DRAWLOT,
+            tagAddRequests = null
         )
         val loginRequest = MemberSignInRequest(
             email = "1",

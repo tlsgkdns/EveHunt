@@ -2,7 +2,6 @@ package com.evehunt.evehunt.domain.event.dto
 
 import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.event.model.EventStatus
-import com.evehunt.evehunt.domain.event.model.EventType
 import java.time.LocalDateTime
 
 data class EventResponse(
@@ -14,7 +13,6 @@ data class EventResponse(
     val eventImage: String?,
     val capacity: Int,
     val status: EventStatus,
-    val eventType: EventType,
     val hostId: Long?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
@@ -33,7 +31,6 @@ data class EventResponse(
                 question = event.question,
                 capacity = event.capacity,
                 status = event.eventStatus,
-                eventType = event.eventType,
                 hostId = event.host?.id,
                 createdAt = event.createdAt.toLocalDateTime(),
                 closeAt = event.closeAt.toLocalDateTime(),
