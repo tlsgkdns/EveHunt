@@ -5,10 +5,6 @@ import com.evehunt.evehunt.domain.mail.service.MailService
 import com.evehunt.evehunt.domain.member.dto.*
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
-import com.evehunt.evehunt.global.common.available.AvailableCheckList
-import com.evehunt.evehunt.global.common.available.DuplicateChecker
-import com.evehunt.evehunt.global.common.available.dto.AvailableRequest
-import com.evehunt.evehunt.global.common.available.dto.AvailableResponse
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import org.springframework.stereotype.Service

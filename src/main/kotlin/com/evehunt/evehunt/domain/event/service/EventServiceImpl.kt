@@ -55,11 +55,13 @@ class EventServiceImpl(
     }
 
     override fun getEvent(eventId: Long): EventResponse {
-        return eventEntityService.getEvent(eventId)
+        val event = eventEntityService.getEvent(eventId)
+        event.eventTags = tagService.getTags(eventId)
+        return event
     }
 
-    override fun getEvents(pageRequest: PageRequest, keyword: String?): PageResponse<EventResponse> {
-        return eventEntityService.getEvents(pageRequest, keyword)
+    override fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse> {
+        return eventEntityService.getEvents(pageRequest)
     }
 
     override fun closeEvent(eventId: Long): Long {
@@ -95,6 +97,10 @@ class EventServiceImpl(
     @Transactional
     override fun resignEventParticipate(eventId: Long, username: String) {
         participateHistoryService.resignEventParticipate(eventId, username)
+    }
+
+    override fun getPopularEvent(): List<EventResponse> {
+        return eventEntityService.getPopularEvent()
     }
 
     @Transactional

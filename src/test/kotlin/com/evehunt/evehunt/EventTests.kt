@@ -105,7 +105,7 @@ class EventTests @Autowired constructor(
         edited.winMessage shouldBe eventEdit.winMessage
         edited.description shouldBe eventEdit.description
         edited.capacity shouldBe eventEdit.capacity
-        edited.closeAt shouldBe event.closeAt
+        edited.closedAt shouldBe event.closedAt
         edited.eventImage shouldBe event.eventImage
     }
     @Test
@@ -269,5 +269,11 @@ class EventTests @Autowired constructor(
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(EventWinnerRequest(winnerList))))
             .andExpect(MockMvcResultMatchers.status().isUnauthorized)
+    }
+
+    @Test
+    fun testGetPopularEvent()
+    {
+        eventService.getPopularEvent()
     }
 }

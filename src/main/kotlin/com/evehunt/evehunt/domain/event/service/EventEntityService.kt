@@ -10,7 +10,8 @@ interface EventEntityService {
     fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse
     fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse
     fun getEvent(eventId: Long): EventResponse
-    fun getEvents(pageRequest: PageRequest, keyword: String?): PageResponse<EventResponse>
+    fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse>
     fun closeEvent(eventId: Long): Long
+    fun getPopularEvent(): List<EventResponse>
     fun setExpiredEventsClose(): List<EventResponse>
 }

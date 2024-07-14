@@ -6,6 +6,10 @@ import kotlin.math.min
 data class PageResponse<T>(
     val page: Int,
     val size: Int,
+    val keyword: String?,
+    val sortType: SortType?,
+    val searchType: SearchType?,
+    val asc: Boolean?,
     val total: Int,
     val start: Int,
     val end: Int,
@@ -26,6 +30,10 @@ data class PageResponse<T>(
             return PageResponse(
                 page = pageRequestDTO.page,
                 size = size,
+                keyword = pageRequestDTO.keyword,
+                searchType = pageRequestDTO.searchType,
+                asc = pageRequestDTO.asc,
+                sortType = pageRequestDTO.sortType,
                 total = total,
                 dtoList = dtoList,
                 start = start,

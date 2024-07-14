@@ -5,7 +5,6 @@ import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.image.model.Image
 import com.evehunt.evehunt.domain.member.model.Member
 import com.evehunt.evehunt.domain.tag.dto.TagAddRequest
-import com.fasterxml.jackson.annotation.JsonFormat
 import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDateTime
 import java.time.ZoneId

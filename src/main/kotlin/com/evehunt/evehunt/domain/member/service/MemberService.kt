@@ -2,8 +2,6 @@ package com.evehunt.evehunt.domain.member.service
 
 import com.evehunt.evehunt.domain.member.dto.*
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
-import com.evehunt.evehunt.global.common.available.dto.AvailableRequest
-import com.evehunt.evehunt.global.common.available.dto.AvailableResponse
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 

@@ -54,8 +54,8 @@ class EventEntityServiceImpl(
     }
 
     @Transactional
-    override fun getEvents(pageRequest: PageRequest, keyword: String?): PageResponse<EventResponse> {
-        val eventPages = eventRepository.searchEvents(pageRequest.getPageable(), keyword)
+    override fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse> {
+        val eventPages = eventRepository.searchEvents(pageRequest)
         val content = eventPages.content.map { EventResponse.from(it) }
         return PageResponse.of(pageRequest, content, eventPages.totalElements.toInt())
     }
@@ -78,5 +78,12 @@ class EventEntityServiceImpl(
             eventRepository.save(event)
         }
         return list
+    }
+
+    @Transactional
+    override fun getPopularEvent(): List<EventResponse> {
+        return eventRepository.getPopularEvents().map {
+            EventResponse.from(it)
+        }
     }
 }

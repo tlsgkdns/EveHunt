@@ -5,21 +5,12 @@ import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateEditRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
-import com.evehunt.evehunt.global.common.page.PageRequest
-import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/events/{eventId}/participants")
@@ -27,7 +18,7 @@ class ParticipateHistoryController(
     private val participateHistoryService: ParticipateHistoryService
 ) {
     @GetMapping()
-    fun getParticipateHistoryByEvent(@PathVariable eventId: Long, @AuthenticationPrincipal user: UserDetails):
+    fun getParticipateHistories(@PathVariable eventId: Long):
             ResponseEntity<List<ParticipateResponse>>
     {
         return participateHistoryService.getParticipateHistoryByEvent(eventId).let {
@@ -65,6 +56,14 @@ class ParticipateHistoryController(
     {
         return participateHistoryService.editParticipateAnswer(eventId, editRequest, user.username).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
+        }
+    }
+
+    @GetMapping("/count")
+    fun getParticipantsCount(@PathVariable eventId: Long): ResponseEntity<Int>
+    {
+        return participateHistoryService.getParticipateHistoryByEvent(eventId).let {
+            ResponseEntity.status(HttpStatus.OK).body(it.size)
         }
     }
 }

@@ -2,6 +2,7 @@ package com.evehunt.evehunt.domain.event.dto
 
 import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.event.model.EventStatus
+import com.evehunt.evehunt.domain.tag.dto.TagResponse
 import java.time.LocalDateTime
 
 data class EventResponse(
@@ -16,7 +17,8 @@ data class EventResponse(
     val hostId: Long?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    val closeAt: LocalDateTime
+    val closedAt: LocalDateTime,
+    var eventTags: List<TagResponse>? = null
 )
 {
     companion object
@@ -33,7 +35,7 @@ data class EventResponse(
                 status = event.eventStatus,
                 hostId = event.host?.id,
                 createdAt = event.createdAt.toLocalDateTime(),
-                closeAt = event.closeAt.toLocalDateTime(),
+                closedAt = event.closeAt.toLocalDateTime(),
                 updatedAt = event.updatedAt.toLocalDateTime(),
                 eventImage = event.image?.getLink()
             )

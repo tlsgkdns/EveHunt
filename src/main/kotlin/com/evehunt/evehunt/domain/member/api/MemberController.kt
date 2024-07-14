@@ -62,15 +62,9 @@ class MemberController(
             .let { ResponseEntity.status(HttpStatus.NOT_FOUND).build() }
     }
     @GetMapping("/events")
-    fun getParticipateHistoryByMember(@AuthenticationPrincipal user: UserDetails, pageRequest: PageRequest): ResponseEntity<PageResponse<ParticipateResponse>>
-    {
+    fun getParticipateHistoryByMember(@AuthenticationPrincipal user: UserDetails, pageRequest: PageRequest): ResponseEntity<PageResponse<ParticipateResponse>> {
         return memberService.getParticipatedEvents(pageRequest, user.username).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
-    }
-    @GetMapping("/email/available")
-    fun checkEmailAvailability(email: String)
-    {
-
     }
 }

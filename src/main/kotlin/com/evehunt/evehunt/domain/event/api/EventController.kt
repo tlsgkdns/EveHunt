@@ -28,9 +28,9 @@ class EventController(
         }
     }
     @GetMapping()
-    fun getEvents(@RequestBody pageRequest: PageRequest, keyword: String?): ResponseEntity<PageResponse<EventResponse>>
+    fun getEvents(pageRequest: PageRequest): ResponseEntity<PageResponse<EventResponse>>
     {
-        return eventService.getEvents(pageRequest, keyword).let {
+        return eventService.getEvents(pageRequest).let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
@@ -62,6 +62,14 @@ class EventController(
     fun getTags(@PathVariable eventId: Long): ResponseEntity<List<TagResponse>>
     {
         return eventService.getTags(eventId).let {
+            ResponseEntity.status(HttpStatus.OK).body(it)
+        }
+    }
+
+    @GetMapping("/popular")
+    fun getPopularEvents(): ResponseEntity<List<EventResponse>>
+    {
+        return eventService.getPopularEvent().let {
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
