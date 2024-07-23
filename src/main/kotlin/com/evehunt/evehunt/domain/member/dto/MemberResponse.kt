@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 
 data class MemberResponse(
     val email: String,
+    val memberId: Long?,
     val profileImageName: String?,
     val name: String,
     val registeredDate: LocalDateTime,
@@ -18,6 +19,7 @@ data class MemberResponse(
         {
             return MemberResponse(
                 email = member.email,
+                memberId = member.id,
                 name = member.name,
                 profileImageName = member.profileImage?.getLink(),
                 registeredDate = member.createdAt.toLocalDateTime(),

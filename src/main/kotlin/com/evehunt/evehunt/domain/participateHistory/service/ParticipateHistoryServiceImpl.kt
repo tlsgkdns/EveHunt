@@ -30,17 +30,17 @@ class ParticipateHistoryServiceImpl(
     private val memberRepository: MemberRepository
 ): ParticipateHistoryService {
     val winPickWinnerStrategy: PickWinnerStrategy = PickWinnerBinarySearch()
-    fun getExistEvent(eventId: Long): Event
+    fun getExistEvent(eventId: Long?): Event
     {
         return eventRepository.findByIdOrNull(eventId)
             ?: throw ModelNotFoundException("Event", eventId.toString())
     }
-    fun getExistParticipateHistory(eventId: Long, memberEmail: String): ParticipateHistory
+    fun getExistParticipateHistory(eventId: Long?, memberEmail: String): ParticipateHistory
     {
         return participateHistoryRepository.getParticipateHistory(eventId, memberEmail)
             ?: throw ModelNotFoundException("Participate", memberEmail)
     }
-    override fun participateEvent(eventId: Long, username: String, participateRequest: ParticipateRequest): ParticipateResponse {
+    override fun participateEvent(eventId: Long?, username: String, participateRequest: ParticipateRequest): ParticipateResponse {
         lateinit var participateHistoryResponse: ParticipateResponse
         if(participateHistoryRepository.getParticipateHistory(eventId, username) != null)
             throw AlreadyExistModelException(eventId.toString())
@@ -49,7 +49,7 @@ class ParticipateHistoryServiceImpl(
         try {
             participateHistoryRepository.getLock("Lock $eventId", 3000)
             if(event.eventStatus != EventStatus.PROCEED) throw InvalidEventException(eventId)
-            if(getParticipateHistoryByEvent(eventId).size + 1 > event.capacity)
+            if(participateHistoryRepository.getParticipantsByEvent(eventId).size + 1 > event.capacity)
                 throw FullCapacityException("Event", eventId.toString(), event.capacity)
             val participateHistory = participateRequest.to(event, member)
             participateHistoryResponse = participateHistoryRepository.save(participateHistory)
@@ -61,13 +61,13 @@ class ParticipateHistoryServiceImpl(
     }
 
     @Transactional
-    override fun getParticipateHistory(eventId: Long, username: String): ParticipateResponse {
+    override fun getParticipateHistory(eventId: Long?, username: String): ParticipateResponse {
         return getExistParticipateHistory(eventId, username)
             .let { ParticipateResponse.from(it) }
     }
 
     @Transactional
-    override fun editParticipateAnswer(eventId: Long, participateEditRequest: ParticipateEditRequest,
+    override fun editParticipateAnswer(eventId: Long?, participateEditRequest: ParticipateEditRequest,
         username: String): ParticipateResponse {
         val participateHistory = getExistParticipateHistory(eventId, username)
         participateHistory.answer = participateEditRequest.answer
@@ -83,13 +83,17 @@ class ParticipateHistoryServiceImpl(
         return list.map { ParticipateResponse.from(it) }
     }
 
+    override fun getParticipantCount(eventId: Long?): Int {
+        return participateHistoryRepository.getParticipantsByEvent(eventId).size
+    }
+
     @Transactional
-    override fun resignEventParticipate(eventId: Long, username: String) {
+    override fun resignEventParticipate(eventId: Long?, username: String) {
         val participateHistory = getExistParticipateHistory(eventId, username)
         participateHistoryRepository.delete(participateHistory)
     }
     @Transactional
-    override fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
+    override fun setEventResult(eventId: Long?, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
         val participantList = participateHistoryRepository.getParticipantsByEvent(eventId)
         val list = winPickWinnerStrategy.pick(participantList, eventWinnerRequest.eventWinners)
             .map { participateHistoryRepository.save(it) }
@@ -97,14 +101,16 @@ class ParticipateHistoryServiceImpl(
     }
 
     @Transactional
-    override fun getParticipateHistoryByMember(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse> {
+    override fun getParticipateHistoryByMember(username: String, pageRequest: PageRequest): PageResponse<ParticipateResponse> {
         val pages = participateHistoryRepository.getParticipantsByMember(pageRequest.getPageable(), username)
         val content = pages.content.map { ParticipateResponse.from(it) }
         return PageResponse.of(pageRequest, content, pages.totalElements.toInt())
     }
 
     override fun getParticipateHistoryByEvent(eventId: Long?): List<ParticipateResponse> {
-        return participateHistoryRepository.getParticipantsByEvent(eventId)
-            .map { ParticipateResponse.from(it) }
+        return participateHistoryRepository.getParticipantsByEvent(eventId).map {
+            ParticipateResponse.from(it)
+        }
+
     }
 }

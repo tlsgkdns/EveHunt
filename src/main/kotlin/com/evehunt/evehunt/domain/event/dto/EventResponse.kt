@@ -15,10 +15,12 @@ data class EventResponse(
     val capacity: Int,
     val status: EventStatus,
     val hostId: Long?,
+    val hostName: String?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val closedAt: LocalDateTime,
-    var eventTags: List<TagResponse>? = null
+    var eventTags: List<TagResponse>? = null,
+    var participantCount: Int = 0,
 )
 {
     companion object
@@ -34,6 +36,7 @@ data class EventResponse(
                 capacity = event.capacity,
                 status = event.eventStatus,
                 hostId = event.host?.id,
+                hostName = event.host?.name,
                 createdAt = event.createdAt.toLocalDateTime(),
                 closedAt = event.closeAt.toLocalDateTime(),
                 updatedAt = event.updatedAt.toLocalDateTime(),

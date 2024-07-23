@@ -10,8 +10,9 @@ interface MemberService {
     fun signIn(memberSignInRequest: MemberSignInRequest): MemberSignInResponse
     fun getMember(memberId: Long?): MemberResponse
     fun editMember(memberId: Long, memberEditRequest: MemberEditRequest): MemberResponse
-    fun getMember(username: String): MemberResponse
+    fun getMember(username: String?): MemberResponse
     fun withdrawMember(memberId: Long): Long
     fun deleteAllMember()
     fun getParticipatedEvents(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse>
+    fun editPassword(memberId: Long, memberPasswordEditRequest: MemberPasswordEditRequest): MemberResponse
 }

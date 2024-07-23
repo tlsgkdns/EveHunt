@@ -3,7 +3,7 @@ package com.evehunt.evehunt.domain.tag.dto
 import com.evehunt.evehunt.domain.tag.model.Tag
 
 data class TagResponse(
-    val tagName: String
+    val tagName: String?
 )
 {
     companion object

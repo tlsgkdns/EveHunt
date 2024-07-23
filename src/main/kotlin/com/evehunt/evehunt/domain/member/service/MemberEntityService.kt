@@ -9,5 +9,6 @@ interface MemberEntityService {
     fun editMember(memberId: Long, memberEditRequest: MemberEditRequest): MemberResponse
     fun withdrawMember(memberId: Long): Long
     fun deleteAllMember()
-    fun getMember(username: String): MemberResponse
+    fun getMember(username: String?): MemberResponse
+    fun editPassword(memberId: Long, passwordEditRequest: MemberPasswordEditRequest): MemberResponse
 }

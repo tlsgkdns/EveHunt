@@ -22,4 +22,18 @@ class QueryDslTagRepositoryImpl: QueryDslSupport(), QueryDslTagRepository {
             .fetch()
             .size
     }
+
+    override fun getPopularTags(): List<Tag> {
+        val list = queryFactory.select(tag.tagName, tag.tagName.count())
+            .from(tag)
+            .groupBy(tag.tagName)
+            .orderBy(tag.tagName.count().desc())
+            .offset(0)
+            .limit(10)
+            .fetch()
+        return list.map {
+            Tag(it.get(tag.event), it.get(tag.tagName))
+        }
+    }
+
 }

@@ -59,4 +59,11 @@ class TagServiceImpl(
         val tag = getExistTag(tagId)
         tagRepository.delete(tag)
     }
+
+    override fun getPopularTags(): List<TagResponse> {
+        return tagRepository.getPopularTags()
+            .map {
+                TagResponse.from(it)
+            }
+    }
 }

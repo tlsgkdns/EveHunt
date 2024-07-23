@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class QueryDslParticipateHistoryRepositoryImpl: QueryDslParticipateHistoryRepository, QueryDslSupport() {
     val participateHistory = QParticipateHistory.participateHistory
-    override fun getParticipateHistory(eventId: Long, email: String): ParticipateHistory? {
+    override fun getParticipateHistory(eventId: Long?, email: String): ParticipateHistory? {
         val query = BooleanBuilder()
             .and(participateHistory.event.id.eq(eventId))
             .and(participateHistory.participant.email.eq(email))

@@ -7,11 +7,12 @@ import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 
 interface EventEntityService {
-    fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse
+    fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse
     fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse
-    fun getEvent(eventId: Long): EventResponse
+    fun getEvent(eventId: Long?): EventResponse
     fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse>
-    fun closeEvent(eventId: Long): Long
+    fun deleteEvent(eventId: Long?): Long?
     fun getPopularEvent(): List<EventResponse>
     fun setExpiredEventsClose(): List<EventResponse>
+    fun closeEvent(eventId: Long?): EventResponse
 }

@@ -1,8 +1,7 @@
 package com.evehunt.evehunt.global.common.page
 
 enum class SortType {
-    CLOSE, NEW, TITLE, HOST;
-
+    CLOSE, NEW, TITLE, HOST, RANK;
     companion object
     {
         fun of(code: String): SortType {

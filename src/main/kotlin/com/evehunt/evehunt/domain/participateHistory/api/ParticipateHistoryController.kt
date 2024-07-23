@@ -5,7 +5,6 @@ import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateEditRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
-import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -41,7 +40,7 @@ class ParticipateHistoryController(
             ResponseEntity.status(HttpStatus.NO_CONTENT).body(it)
         }
     }
-    @CheckEventLoginMember
+
     @PatchMapping("/result")
     fun setEventResult(@PathVariable eventId: Long, @RequestBody eventWinnerRequest: EventWinnerRequest):
             ResponseEntity<List<ParticipateResponse>>
@@ -62,8 +61,8 @@ class ParticipateHistoryController(
     @GetMapping("/count")
     fun getParticipantsCount(@PathVariable eventId: Long): ResponseEntity<Int>
     {
-        return participateHistoryService.getParticipateHistoryByEvent(eventId).let {
-            ResponseEntity.status(HttpStatus.OK).body(it.size)
+        return participateHistoryService.getParticipantCount(eventId).let {
+            ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
 }

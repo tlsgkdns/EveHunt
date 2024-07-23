@@ -28,6 +28,7 @@ class EventServiceImpl(
     private val participateHistoryService: ParticipateHistoryService,
     private val tagService: TagService
 ): EventService {
+
     private final val resultTitleMessage = "이벤트 결과 안내드립니다."
     private final val eventHostTitleMessage = "이벤트를 성공적으로 개최했습니다."
     private final val eventParticipateSuccessTitleMessage = "이벤트에 성공적으로 참여하였습니다."
@@ -39,7 +40,11 @@ class EventServiceImpl(
 
     private fun getEmail(memberId: Long?): String
         = memberService.getMember(memberId).email
-    override fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse {
+    override fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse {
+        tagService.deleteTags(eventId)
+        eventEditRequest.tagAddRequests?.forEach {
+            tagService.addTag(eventId, it)
+        }
         return eventEntityService.editEvent(eventId, eventEditRequest)
     }
 
@@ -54,17 +59,26 @@ class EventServiceImpl(
         return event
     }
 
-    override fun getEvent(eventId: Long): EventResponse {
+    override fun getEvent(eventId: Long?): EventResponse {
         val event = eventEntityService.getEvent(eventId)
         event.eventTags = tagService.getTags(eventId)
+        event.participantCount = participateHistoryService.getParticipantCount(eventId)
         return event
     }
 
     override fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse> {
-        return eventEntityService.getEvents(pageRequest)
+        return eventEntityService.getEvents(pageRequest).apply {
+            this.dtoList.forEach {
+                it.participantCount = participateHistoryService.getParticipantCount(it.id)
+            }
+        }
     }
 
-    override fun closeEvent(eventId: Long): Long {
+    override fun deleteEvent(eventId: Long?): Long? {
+        return eventEntityService.deleteEvent(eventId)
+    }
+
+    override fun closeEvent(eventId: Long?): EventResponse {
         return eventEntityService.closeEvent(eventId)
     }
 
@@ -76,7 +90,7 @@ class EventServiceImpl(
 
     @Transactional
     override fun participateEvent(
-        eventId: Long,
+        eventId: Long?,
         username: String,
         participateRequest: ParticipateRequest
     ): ParticipateResponse {
@@ -95,43 +109,51 @@ class EventServiceImpl(
     }
 
     @Transactional
-    override fun resignEventParticipate(eventId: Long, username: String) {
+    override fun resignEventParticipate(eventId: Long?, username: String) {
         participateHistoryService.resignEventParticipate(eventId, username)
     }
 
     override fun getPopularEvent(): List<EventResponse> {
-        return eventEntityService.getPopularEvent()
+        return eventEntityService.getPopularEvent().onEach {
+            it.participantCount = participateHistoryService.getParticipantCount(it.id)
+        }
     }
 
     @Transactional
-    override fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
+    override fun setEventResult(eventId: Long?, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
         val list = participateHistoryService.setEventResult(eventId, eventWinnerRequest)
-        val event = eventEntityService.getEvent(eventId)
+        val title = eventEntityService.getEvent(eventId).title
+        eventEntityService.deleteEvent(eventId)
         for(participant in list)
         {
             val email = memberService.getMember(participant.memberId!!).email
-            val resultMessage = if(participant.status == EventParticipateStatus.WIN) event.winMessage
-                else resultLoseMessage(event.title)
+            val resultMessage = if(participant.status == EventParticipateStatus.LOSE) resultLoseMessage(title)
+            else
+            {
+                eventWinnerRequest.let {
+                    it.winMessages[it.eventWinners.indexOf(participant.id)]
+                }
+            }
             mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
         }
         return list
     }
 
-    override fun getParticipateHistories(eventId: Long): List<ParticipateResponse> {
+    override fun getParticipateHistories(eventId: Long?): List<ParticipateResponse> {
         return participateHistoryService.getParticipateHistoryByEvent(eventId)
     }
 
-    override fun getParticipateHistory(eventId: Long, username: String): ParticipateResponse {
+    override fun getParticipateHistory(eventId: Long?, username: String): ParticipateResponse {
         return participateHistoryService.getParticipateHistory(eventId, username)
     }
 
-    override fun getTags(eventId: Long): List<TagResponse> {
+    override fun getTags(eventId: Long?): List<TagResponse> {
         return tagService.getTags(eventId)
     }
-    override fun addTag(eventId: Long, tagAddRequest: TagAddRequest): TagResponse {
+    override fun addTag(eventId: Long?, tagAddRequest: TagAddRequest): TagResponse {
         return tagService.addTag(eventId, tagAddRequest)
     }
-    override fun deleteTag(eventId: Long, tagId: Long) {
+    override fun deleteTag(eventId: Long?, tagId: Long?) {
         return tagService.deleteTag(eventId, tagId)
     }
 }

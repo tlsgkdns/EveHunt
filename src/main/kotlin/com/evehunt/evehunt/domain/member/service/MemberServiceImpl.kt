@@ -23,7 +23,7 @@ class MemberServiceImpl(
 
     override fun registerMember(memberRegisterRequest: MemberRegisterRequest): MemberResponse {
         val member = memberService.registerMember(memberRegisterRequest)
-        mailService.sendMail(member.email, MailRequest(welcomeTitleMessage, welcomeContentMessage(member.name)))
+        // mailService.sendMail(member.email, MailRequest(welcomeTitleMessage, welcomeContentMessage(member.name)))
         return member
     }
 
@@ -39,7 +39,7 @@ class MemberServiceImpl(
         return memberService.editMember(memberId, memberEditRequest)
     }
 
-    override fun getMember(username: String): MemberResponse {
+    override fun getMember(username: String?): MemberResponse {
         return memberService.getMember(username)
     }
 
@@ -56,6 +56,10 @@ class MemberServiceImpl(
     }
 
     override fun getParticipatedEvents(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse> {
-        return participateHistoryService.getParticipateHistoryByMember(pageRequest, username)
+        return participateHistoryService.getParticipateHistoryByMember(username, pageRequest)
+    }
+
+    override fun editPassword(memberId: Long, memberPasswordEditRequest: MemberPasswordEditRequest): MemberResponse {
+        return memberService.editPassword(memberId, memberPasswordEditRequest)
     }
 }

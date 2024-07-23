@@ -4,6 +4,8 @@ import com.evehunt.evehunt.domain.image.model.Image
 import com.evehunt.evehunt.domain.member.model.Member
 import com.evehunt.evehunt.global.common.BaseTimeEntity
 import jakarta.persistence.*
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
 import java.time.ZonedDateTime
 
 @Entity
@@ -17,6 +19,7 @@ class Event(
     var winMessage: String,
     var question: String?,
     var closeAt: ZonedDateTime,
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     var host: Member? = null
 ): BaseTimeEntity()

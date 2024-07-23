@@ -8,4 +8,5 @@ interface TagService {
     fun addTag(eventId: Long?, tagAddRequest: TagAddRequest): TagResponse
     fun deleteTags(eventId: Long?)
     fun deleteTag(eventId: Long?, tagId: Long?)
+    fun getPopularTags(): List<TagResponse>
 }

@@ -8,12 +8,13 @@ import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 
 interface ParticipateHistoryService {
-    fun participateEvent(eventId: Long, username: String, participateRequest: ParticipateRequest): ParticipateResponse
-    fun resignEventParticipate(eventId: Long, username: String)
-    fun setEventResult(eventId: Long, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse>
-    fun getParticipateHistoryByMember(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse>
-    fun getParticipateHistoryByEvent(eventId: Long?): List<ParticipateResponse>
-    fun getParticipateHistory(eventId: Long, username: String): ParticipateResponse
-    fun editParticipateAnswer(eventId: Long, participateEditRequest: ParticipateEditRequest, username: String): ParticipateResponse
+    fun participateEvent(eventId: Long?, username: String, participateRequest: ParticipateRequest): ParticipateResponse
+    fun resignEventParticipate(eventId: Long?, username: String)
+    fun setEventResult(eventId: Long?, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse>
+    fun getParticipateHistoryByMember(username: String, pageRequest: PageRequest): PageResponse<ParticipateResponse>
+    fun getParticipateHistoryByEvent(eventId: Long?):List<ParticipateResponse>
+    fun getParticipateHistory(eventId: Long?, username: String): ParticipateResponse
+    fun editParticipateAnswer(eventId: Long?, participateEditRequest: ParticipateEditRequest, username: String): ParticipateResponse
     fun setParticipantsStatusWait(eventId: Long?): List<ParticipateResponse>
+    fun getParticipantCount(eventId: Long?): Int
 }

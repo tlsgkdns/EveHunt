@@ -6,6 +6,8 @@ import com.evehunt.evehunt.domain.member.model.Member
 import com.evehunt.evehunt.domain.member.repository.MemberRepository
 import com.evehunt.evehunt.global.exception.exception.AlreadyExistModelException
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
+import com.evehunt.evehunt.global.exception.exception.UnMatchedPasswordException
+import com.evehunt.evehunt.global.exception.exception.UnMatchedValueException
 import com.evehunt.evehunt.global.infra.security.TokenProvider
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -22,7 +24,7 @@ class MemberEntityServiceImpl(
     {
         return memberRepository.findByIdOrNull(id) ?: throw ModelNotFoundException("Member", id.toString())
     }
-    private fun getExistMember(email: String): Member
+    private fun getExistMember(email: String?): Member
     {
         return memberRepository.findMemberByEmail(email) ?: throw ModelNotFoundException("Member", email)
     }
@@ -38,7 +40,7 @@ class MemberEntityServiceImpl(
     override fun signIn(memberSignInRequest: MemberSignInRequest): MemberSignInResponse {
         val member = getExistMember(memberSignInRequest.email)
             .takeIf { encoder.matches(memberSignInRequest.password, it.password) }
-            ?: throw IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.")
+            ?: throw UnMatchedValueException("아이디", "비밀번호")
         val token = tokenProvider.createToken("${member.email}:${member.name}")
         return MemberSignInResponse(member.email, token)
     }
@@ -48,7 +50,7 @@ class MemberEntityServiceImpl(
         return getExistMember(memberId).let { MemberResponse.from(it) }
     }
 
-    override fun getMember(username: String): MemberResponse {
+    override fun getMember(username: String?): MemberResponse {
         return getExistMember(username).let { MemberResponse.from(it) }
     }
 
@@ -70,5 +72,18 @@ class MemberEntityServiceImpl(
 
     override fun deleteAllMember() {
         memberRepository.deleteAll()
+    }
+
+    @Transactional
+    override fun editPassword(memberId: Long, passwordEditRequest: MemberPasswordEditRequest): MemberResponse {
+        if(passwordEditRequest.passwordCheck != passwordEditRequest.newPassword)
+            throw UnMatchedValueException("새 비밀번호", "새 비밀번호 확인")
+        val member = getExistMember(memberId)
+        if(!encoder.matches(passwordEditRequest.currentPassword, member.password))
+            throw UnMatchedPasswordException()
+        member.password = encoder.encode(passwordEditRequest.newPassword)
+        return memberRepository.save(member).let {
+            MemberResponse.from(it)
+        }
     }
 }

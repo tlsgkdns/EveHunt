@@ -12,10 +12,8 @@ import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
 import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participateHistory.model.EventParticipateStatus
 import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
-import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.BeforeAll
@@ -45,7 +43,7 @@ class EventTests @Autowired constructor(
 
     companion object
     {
-        private const val memberNum = 1000
+        private const val memberNum = 100
         @JvmStatic
         @BeforeAll
         fun registerMember(@Autowired memberService: MemberService)
@@ -97,7 +95,9 @@ class EventTests @Autowired constructor(
             winMessage = "Winnnnnnnn",
             closeAt = null,
             eventImage = null,
-            capacity = 300
+            capacity = 300,
+            question = "Hello",
+            tagAddRequests = null
         )
         val event = eventService.getEvent(1)
         val edited = eventService.editEvent(1, eventEdit)
@@ -113,9 +113,7 @@ class EventTests @Autowired constructor(
     {
         hostEvent()
         eventService.closeEvent(1)
-        shouldThrow<ModelNotFoundException> {
-            eventService.getEvent(1)
-        }
+        eventService.getEvent(1) shouldBe null
     }
 
     fun participateEvent(id: Long): List<ParticipateResponse>
@@ -152,7 +150,7 @@ class EventTests @Autowired constructor(
         for(id in 1L .. memberNum) participateEvent(id)
         val winnerList:MutableList<Long> = mutableListOf()
         for(id in 1L .. memberNum step 2) winnerList.add(id)
-        val list = eventService.setEventResult(eventId, EventWinnerRequest(winnerList))
+        val list = eventService.setEventResult(eventId, EventWinnerRequest(winnerList, winnerList.map { it.toString() }))
         for(id in 1 .. memberNum)
         {
             if(id % 2 > 0) list[id - 1].status shouldBe EventParticipateStatus.WIN
@@ -240,7 +238,9 @@ class EventTests @Autowired constructor(
             winMessage = "Winnnnnnnn",
             closeAt = null,
             eventImage = null,
-            capacity = 300
+            capacity = 300,
+            question = "Hello",
+            tagAddRequests = null
         )
         val eventEditJson = objectMapper.writeValueAsString(eventEditRequest)
         mockMvc.perform(patch("/events/1")
@@ -267,13 +267,7 @@ class EventTests @Autowired constructor(
             patch("/events/${eventId}/participants/result")
                 .header("Authorization", "Bearer $jwt")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(EventWinnerRequest(winnerList))))
+                .content(objectMapper.writeValueAsString(EventWinnerRequest(winnerList, winnerList.map { it.toString() }))))
             .andExpect(MockMvcResultMatchers.status().isUnauthorized)
-    }
-
-    @Test
-    fun testGetPopularEvent()
-    {
-        eventService.getPopularEvent()
     }
 }

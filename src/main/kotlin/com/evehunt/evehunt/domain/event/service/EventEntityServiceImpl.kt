@@ -21,18 +21,19 @@ class EventEntityServiceImpl(
     private val eventRepository: EventRepository,
     private val memberRepository: MemberRepository
 ): EventEntityService {
-    private fun getExistEvent(eventId: Long): Event
+    private fun getExistEvent(eventId: Long?): Event
     {
         return eventRepository.findByIdOrNull(eventId) ?: throw ModelNotFoundException("Event", eventId.toString())
     }
 
     @Transactional
-    override fun editEvent(eventId: Long, eventEditRequest: EventEditRequest): EventResponse {
+    override fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse {
         val event = getExistEvent(eventId)
         event.title = eventEditRequest.title ?: event.title
         event.winMessage = eventEditRequest.winMessage ?: event.winMessage
         event.image = Image.from(eventEditRequest.eventImage)
         event.description = eventEditRequest.description ?: event.description
+        event.question = eventEditRequest.question ?: event.question
         event.closeAt = eventEditRequest.closeAt?.atZone(ZoneId.of("Asia/Seoul")) ?: event.closeAt
         event.capacity = eventEditRequest.capacity ?: event.capacity
         return eventRepository.save(event).let { EventResponse.from(it) }
@@ -47,7 +48,7 @@ class EventEntityServiceImpl(
     }
 
     @Transactional
-    override fun getEvent(eventId: Long): EventResponse {
+    override fun getEvent(eventId: Long?): EventResponse {
         return getExistEvent(eventId).let {
             EventResponse.from(it)
         }
@@ -61,9 +62,10 @@ class EventEntityServiceImpl(
     }
 
     @Transactional
-    override fun closeEvent(eventId: Long): Long {
+    override fun deleteEvent(eventId: Long?): Long? {
         val event = getExistEvent(eventId)
-        eventRepository.delete(event)
+        event.eventStatus = EventStatus.CLOSED
+        eventRepository.save(event)
         return eventId
     }
 
@@ -78,6 +80,13 @@ class EventEntityServiceImpl(
             eventRepository.save(event)
         }
         return list
+    }
+
+    override fun closeEvent(eventId: Long?): EventResponse {
+        val event = getExistEvent(eventId)
+        event.eventStatus = EventStatus.CLOSED
+        eventRepository.save(event)
+        return EventResponse.from(event)
     }
 
     @Transactional
