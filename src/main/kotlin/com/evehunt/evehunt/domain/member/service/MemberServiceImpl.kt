@@ -27,6 +27,11 @@ class MemberServiceImpl(
         return member
     }
 
+    override fun registerAdmin(memberRegisterRequest: MemberRegisterRequest): MemberResponse {
+        val memberId = memberService.registerMember(memberRegisterRequest).memberId
+        return memberService.addAdminAuthority(memberId)
+    }
+
     override fun signIn(memberSignInRequest: MemberSignInRequest): MemberSignInResponse {
         return memberService.signIn(memberSignInRequest)
     }
@@ -61,5 +66,17 @@ class MemberServiceImpl(
 
     override fun editPassword(memberId: Long, memberPasswordEditRequest: MemberPasswordEditRequest): MemberResponse {
         return memberService.editPassword(memberId, memberPasswordEditRequest)
+    }
+
+    override fun suspendMember(memberId: Long?, suspendDay: Int): MemberResponse {
+        return memberService.suspendMember(memberId, suspendDay)
+    }
+
+    override fun cancelSuspend(memberId: Long): MemberResponse {
+        return memberService.cancelSuspend(memberId)
+    }
+
+    override fun cancelExpiredSuspend() {
+        memberService.cancelExpiredSuspend()
     }
 }

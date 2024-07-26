@@ -15,6 +15,7 @@ class Event(
     @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     var image: Image?,
     var capacity: Int,
+    @Enumerated(EnumType.STRING)
     var eventStatus: EventStatus,
     var winMessage: String,
     var question: String?,

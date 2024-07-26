@@ -6,8 +6,6 @@ import com.evehunt.evehunt.domain.event.model.QEvent
 import com.evehunt.evehunt.domain.participateHistory.model.QParticipateHistory
 import com.evehunt.evehunt.domain.tag.model.QTag
 import com.evehunt.evehunt.global.common.page.PageRequest
-import com.evehunt.evehunt.global.common.page.SearchType
-import com.evehunt.evehunt.global.common.page.SortType
 import com.evehunt.evehunt.global.infra.querydsl.QueryDslSupport
 import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.types.OrderSpecifier
@@ -27,52 +25,53 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
         val keyword = pageRequest.keyword
         var fromEntity: EntityPathBase<*> = event
         var leftJoinEntity: EntityPathBase<*>? = null
-        var orderBy: OrderSpecifier<*> = event.createdAt.asc()
+        val orderBy: OrderSpecifier<*>
         if(keyword != null)
         {
-            when(pageRequest.searchType)
+            when(pageRequest.searchType?.lowercase())
             {
-                SearchType.TITLE, SearchType.NONE -> whereClause.or(event.title.contains(keyword))
-                SearchType.DESCRIPTION -> whereClause.or(event.description.contains(keyword))
-                SearchType.TITLEDESCRIPTION -> {
+                "description" -> whereClause.or(event.description.contains(keyword))
+                "titledescription" -> {
                     whereClause.or(event.title.contains(keyword))
                     whereClause.or(event.description.contains(keyword))
                 }
-                SearchType.HOST -> {
+                "host" -> {
                     whereClause.or(event.host.name.contains(keyword))
                 }
-                SearchType.PARTICIPATE -> {
-                    fromEntity = participant
-                    leftJoinEntity = participant.event
-                    whereClause.or(participant.participant.id.eq(keyword.toLong()))
-                }
-                SearchType.TAG -> {
+                "tag" -> {
                     fromEntity = tag
                     leftJoinEntity = tag.event
                     whereClause.or(tag.tagName.eq(keyword))
                 }
-                else -> {}
+                "hostid" -> {
+                    whereClause.or(event.host.id.eq(keyword.toLong()))
+                }
+                "participate" -> {
+                    fromEntity = participant
+                    leftJoinEntity = participant.event
+                    whereClause.or(participant.participant.id.eq(keyword.toLong()))
+                }
+                else -> {whereClause.or(event.title.contains(keyword))}
             }
         }
-        when(pageRequest.sortType)
+        when(pageRequest.sortType?.lowercase())
         {
-            SortType.NEW -> {
-                orderBy = if(pageRequest.asc == false) event.createdAt.desc()
-                else event.createdAt.asc()
-            }
-            SortType.CLOSE -> {
+            "close" -> {
                 orderBy = if(pageRequest.asc == false) event.closeAt.desc()
                 else event.closeAt.asc()
             }
-            SortType.HOST -> {
+            "host" -> {
                 orderBy = if(pageRequest.asc == false) event.host.name.desc()
                 else event.host.name.asc()
             }
-            SortType.TITLE -> {
+            "title" -> {
                 orderBy = if(pageRequest.asc == false) event.title.desc()
                 else event.title.asc()
             }
-            else -> {}
+            else -> {
+                orderBy = if(pageRequest.asc == false) event.createdAt.desc()
+                else event.createdAt.asc()
+            }
         }
         val query = queryFactory.select(event)
             .from(fromEntity)

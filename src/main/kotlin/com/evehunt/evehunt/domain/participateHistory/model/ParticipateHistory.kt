@@ -20,6 +20,6 @@ class ParticipateHistory(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
-
+    @Enumerated(EnumType.STRING)
     var status: EventParticipateStatus = EventParticipateStatus.PARTICIPATING
 }

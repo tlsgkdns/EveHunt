@@ -3,6 +3,7 @@ package com.evehunt.evehunt.domain.member.service
 import com.evehunt.evehunt.domain.image.model.Image
 import com.evehunt.evehunt.domain.member.dto.*
 import com.evehunt.evehunt.domain.member.model.Member
+import com.evehunt.evehunt.domain.member.model.MemberType
 import com.evehunt.evehunt.domain.member.repository.MemberRepository
 import com.evehunt.evehunt.global.exception.exception.AlreadyExistModelException
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
@@ -13,6 +14,9 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZonedDateTime
 
 @Service
 class MemberEntityServiceImpl(
@@ -41,7 +45,7 @@ class MemberEntityServiceImpl(
         val member = getExistMember(memberSignInRequest.email)
             .takeIf { encoder.matches(memberSignInRequest.password, it.password) }
             ?: throw UnMatchedValueException("아이디", "비밀번호")
-        val token = tokenProvider.createToken("${member.email}:${member.name}")
+        val token = tokenProvider.createToken("${member.email}:${member.name}:${member.roleSet}")
         return MemberSignInResponse(member.email, token)
     }
 
@@ -85,5 +89,41 @@ class MemberEntityServiceImpl(
         return memberRepository.save(member).let {
             MemberResponse.from(it)
         }
+    }
+
+    override fun addAdminAuthority(memberId: Long?): MemberResponse {
+        val member = getExistMember(memberId)
+        member.roleSet.add(MemberType.ADMIN)
+        return memberRepository.save(member).let {
+            MemberResponse.from(it)
+        }
+    }
+
+    override fun suspendMember(memberId: Long?, suspendDay: Int): MemberResponse {
+        val member = getExistMember(memberId)
+        val suspendUntil = member.suspendedTime?.plusDays(suspendDay.toLong())
+            ?: ZonedDateTime.now().plusDays(suspendDay.toLong())
+        member.suspendedTime = suspendUntil
+        return memberRepository.save(member).let {
+            MemberResponse.from(it)
+        }
+    }
+
+    override fun cancelSuspend(memberId: Long): MemberResponse {
+        val member = getExistMember(memberId)
+        member.suspendedTime = null
+        return memberRepository.save(member).let {
+            MemberResponse.from(it)
+        }
+    }
+
+    override fun cancelExpiredSuspend() {
+        val members = memberRepository.getMembersBySuspendedTimeIsNotNull()
+        for(member in members)
+            if (member.suspendedTime?.toLocalTime()?.isBefore(LocalTime.now()) == true)
+            {
+                member.suspendedTime = null
+                memberRepository.save(member)
+            }
     }
 }

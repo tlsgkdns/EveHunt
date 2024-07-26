@@ -11,4 +11,8 @@ interface MemberEntityService {
     fun deleteAllMember()
     fun getMember(username: String?): MemberResponse
     fun editPassword(memberId: Long, passwordEditRequest: MemberPasswordEditRequest): MemberResponse
+    fun addAdminAuthority(memberId: Long?): MemberResponse
+    fun suspendMember(memberId: Long?, suspendDay: Int): MemberResponse
+    fun cancelSuspend(memberId: Long): MemberResponse
+    fun cancelExpiredSuspend()
 }

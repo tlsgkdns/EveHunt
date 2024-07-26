@@ -7,6 +7,7 @@ import com.evehunt.evehunt.global.common.page.PageResponse
 
 interface MemberService {
     fun registerMember(memberRegisterRequest: MemberRegisterRequest): MemberResponse
+    fun registerAdmin(memberRegisterRequest: MemberRegisterRequest): MemberResponse
     fun signIn(memberSignInRequest: MemberSignInRequest): MemberSignInResponse
     fun getMember(memberId: Long?): MemberResponse
     fun editMember(memberId: Long, memberEditRequest: MemberEditRequest): MemberResponse
@@ -15,4 +16,7 @@ interface MemberService {
     fun deleteAllMember()
     fun getParticipatedEvents(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse>
     fun editPassword(memberId: Long, memberPasswordEditRequest: MemberPasswordEditRequest): MemberResponse
+    fun suspendMember(memberId: Long?, suspendDay: Int): MemberResponse
+    fun cancelSuspend(memberId: Long): MemberResponse
+    fun cancelExpiredSuspend()
 }
