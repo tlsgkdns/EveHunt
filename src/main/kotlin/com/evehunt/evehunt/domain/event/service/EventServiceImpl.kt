@@ -1,5 +1,6 @@
 package com.evehunt.evehunt.domain.event.service
 
+import com.evehunt.evehunt.domain.event.dto.EventCardResponse
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
@@ -17,6 +18,7 @@ import com.evehunt.evehunt.domain.tag.service.TagService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.FullCapacityException
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -40,6 +42,7 @@ class EventServiceImpl(
 
     private fun getEmail(memberId: Long?): String
         = memberService.getMember(memberId).email
+    @Transactional
     override fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse {
         tagService.deleteTags(eventId)
         eventEditRequest.tagAddRequests?.forEach {
@@ -66,12 +69,11 @@ class EventServiceImpl(
         return event
     }
 
-    override fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse> {
-        return eventEntityService.getEvents(pageRequest).apply {
-            this.dtoList.forEach {
-                it.participantCount = participateHistoryService.getParticipantCount(it.id)
-            }
-        }
+    @Cacheable(cacheManager = "cacheManager", cacheNames = ["eventList"],
+        key = "#pageRequest.page.toString() + #pageRequest.size.toString() + #pageRequest.keyword " +
+            "+ #pageRequest.sortType + #pageRequest.searchType + #pageRequest.asc.toString()")
+    override fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse> {
+        return eventEntityService.getEvents(pageRequest)
     }
 
     override fun deleteEvent(eventId: Long?): Long? {
@@ -100,11 +102,11 @@ class EventServiceImpl(
             participateResponse = participateHistoryService.participateEvent(eventId, username, participateRequest)
         } catch (e: FullCapacityException)
         {
-            mailService.sendMail(getEmail(participateResponse.memberId),
-                MailRequest(eventParticipateFailTitleMessage, eventParticipateFailMessage(event.title)))
+            /*mailService.sendMail(getEmail(participateResponse.memberId),
+                MailRequest(eventParticipateFailTitleMessage, eventParticipateFailMessage(event.title))) */
         }
-        mailService.sendMail(getEmail(participateResponse.memberId),
-            MailRequest(eventParticipateSuccessTitleMessage, eventParticipateSuccessMessage(event.title)))
+        /* mailService.sendMail(getEmail(participateResponse.memberId),
+            MailRequest(eventParticipateSuccessTitleMessage, eventParticipateSuccessMessage(event.title))) */
         return participateResponse
     }
 
@@ -113,6 +115,7 @@ class EventServiceImpl(
         participateHistoryService.resignEventParticipate(eventId, username)
     }
 
+    @Cacheable(cacheManager = "cacheManager", cacheNames = ["popularEvents"])
     override fun getPopularEvent(): List<EventResponse> {
         return eventEntityService.getPopularEvent().onEach {
             it.participantCount = participateHistoryService.getParticipantCount(it.id)
@@ -134,7 +137,7 @@ class EventServiceImpl(
                     it.winMessages[it.eventWinners.indexOf(participant.id)]
                 }
             }
-            mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
+            // mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
         }
         return list
     }

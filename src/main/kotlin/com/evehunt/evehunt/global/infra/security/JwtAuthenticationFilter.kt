@@ -24,7 +24,7 @@ class JwtAuthenticationFilter(
         try {
             val token = parseBearerToken(request)
             val user = parseUserSpecification(token)
-            UsernamePasswordAuthenticationToken.authenticated(user, token, null)
+            UsernamePasswordAuthenticationToken.authenticated(user, token, user.authorities)
                 .apply { details = WebAuthenticationDetails(request) }
                 .also { SecurityContextHolder.getContext().authentication = it }
         } catch (e: Exception)
@@ -41,5 +41,9 @@ class JwtAuthenticationFilter(
                 ?.let { tokenProvider.validateTokenAndGetSubject(it) }
                 ?: "anonymous:anonymous"
             ).split(":")
-        .let { User(it[0], "", listOf(SimpleGrantedAuthority(it[1]))) }
+        .let {
+            val authString = it[1].substring(1, it[1].length - 1).filterNot { c -> c == ' '}
+            val authList = authString.split(',').map { auth -> SimpleGrantedAuthority(auth) }
+            User(it[0], "", authList)
+        }
 }

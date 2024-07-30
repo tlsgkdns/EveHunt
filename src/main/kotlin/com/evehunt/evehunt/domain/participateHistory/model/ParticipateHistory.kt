@@ -10,10 +10,10 @@ import org.hibernate.annotations.OnDeleteAction
 @Entity
 class ParticipateHistory(
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @ManyToOne(fetch = FetchType.LAZY)
     val event: Event,
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @ManyToOne(fetch = FetchType.LAZY)
     val participant: Member? = null,
     var answer: String,
 ): BaseTimeEntity() {

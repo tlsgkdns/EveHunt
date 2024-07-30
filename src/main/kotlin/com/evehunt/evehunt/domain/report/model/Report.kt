@@ -4,12 +4,16 @@ import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.member.model.Member
 import com.evehunt.evehunt.global.common.BaseTimeEntity
 import jakarta.persistence.*
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
 
 @Entity
 class Report(
-    @ManyToOne(cascade = [CascadeType.ALL])
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ManyToOne(fetch = FetchType.LAZY)
     val reporter: Member?,
-    @ManyToOne(cascade = [CascadeType.ALL])
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ManyToOne(fetch = FetchType.LAZY)
     val event: Event?,
     val reason: String
 ): BaseTimeEntity() {

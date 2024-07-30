@@ -9,11 +9,15 @@ import com.evehunt.evehunt.domain.tag.repository.TagRepository
 import com.evehunt.evehunt.global.exception.exception.FullCapacityException
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.annotation.CacheConfig
+import org.springframework.cache.annotation.CachePut
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
+@CacheConfig
 class TagServiceImpl(
     @Value("\${event.tag.capacity}")
     private val tagCapacity: Int,
@@ -32,6 +36,7 @@ class TagServiceImpl(
         return tagRepository.findByIdOrNull(tagId)
             ?: throw ModelNotFoundException("Tag", tagId.toString())
     }
+    @Cacheable(cacheManager = "cacheManager", cacheNames = ["eventTags"], key = "#eventId")
     @Transactional
     override fun getTags(eventId: Long?): List<TagResponse> {
         return tagRepository.getTagsByEvent(eventId).map {
@@ -39,6 +44,7 @@ class TagServiceImpl(
         }
     }
 
+    @CachePut(cacheManager = "cacheManager", cacheNames = ["eventTags"], key = "#eventId")
     @Transactional
     override fun addTag(eventId: Long?, tagAddRequest: TagAddRequest): TagResponse {
         val event = getExistEvent(eventId)
@@ -59,6 +65,7 @@ class TagServiceImpl(
         val tag = getExistTag(tagId)
         tagRepository.delete(tag)
     }
+
 
     override fun getPopularTags(): List<TagResponse> {
         return tagRepository.getPopularTags()

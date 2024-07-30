@@ -1,5 +1,6 @@
 package com.evehunt.evehunt.domain.event.service
 
+import com.evehunt.evehunt.domain.event.dto.EventCardResponse
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
@@ -15,7 +16,7 @@ interface EventService {
     fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse
     fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse
     fun getEvent(eventId: Long?): EventResponse
-    fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse>
+    fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse>
     fun deleteEvent(eventId: Long?): Long?
     fun setExpiredEventsClose(): List<EventResponse>
     fun participateEvent(eventId: Long?, username: String, participateRequest: ParticipateRequest): ParticipateResponse

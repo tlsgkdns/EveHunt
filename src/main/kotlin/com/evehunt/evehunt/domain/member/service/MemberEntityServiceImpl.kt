@@ -45,7 +45,7 @@ class MemberEntityServiceImpl(
         val member = getExistMember(memberSignInRequest.email)
             .takeIf { encoder.matches(memberSignInRequest.password, it.password) }
             ?: throw UnMatchedValueException("아이디", "비밀번호")
-        val token = tokenProvider.createToken("${member.email}:${member.name}:${member.roleSet}")
+        val token = tokenProvider.createToken("${member.email}:${member.roleSet}:${member.name}")
         return MemberSignInResponse(member.email, token)
     }
 

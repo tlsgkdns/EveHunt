@@ -1,5 +1,6 @@
 package com.evehunt.evehunt.domain.event.api
 
+import com.evehunt.evehunt.domain.event.dto.EventCardResponse
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
@@ -45,7 +46,7 @@ class EventController(
         }
     }
     @GetMapping()
-    fun getEvents(pageRequest: PageRequest): ResponseEntity<PageResponse<EventResponse>>
+    fun getEvents(pageRequest: PageRequest): ResponseEntity<PageResponse<EventCardResponse>>
     {
         return eventService.getEvents(pageRequest).let {
             ResponseEntity.status(HttpStatus.OK).body(it)

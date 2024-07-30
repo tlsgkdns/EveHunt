@@ -1,5 +1,6 @@
 package com.evehunt.evehunt.domain.event.service
 
+import com.evehunt.evehunt.domain.event.dto.EventCardResponse
 import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.dto.EventResponse
@@ -11,6 +12,7 @@ import com.evehunt.evehunt.domain.member.repository.MemberRepository
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -54,11 +56,12 @@ class EventEntityServiceImpl(
         }
     }
 
+    @Cacheable(cacheManager = "cacheManager", condition = "#pageRequest.page == 1",
+        key = "#pageRequest.sortType + #pageRequest.searchType + #pageRequest.keyword + #pageRequest.asc", cacheNames = ["eventList"])
     @Transactional
-    override fun getEvents(pageRequest: PageRequest): PageResponse<EventResponse> {
+    override fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse> {
         val eventPages = eventRepository.searchEvents(pageRequest)
-        val content = eventPages.content.map { EventResponse.from(it) }
-        return PageResponse.of(pageRequest, content, eventPages.totalElements.toInt())
+        return PageResponse.of(pageRequest, eventPages.toList(), eventPages.totalElements.toInt())
     }
 
     @Transactional

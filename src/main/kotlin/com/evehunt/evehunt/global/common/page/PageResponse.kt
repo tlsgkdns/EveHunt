@@ -7,6 +7,8 @@ data class PageResponse<T>(
     val page: Int,
     val size: Int,
     val sortType: String?,
+    val keyword: String?,
+    val searchType: String?,
     val asc: Boolean?,
     val total: Int,
     val start: Int,
@@ -35,7 +37,9 @@ data class PageResponse<T>(
                 start = start,
                 end = end,
                 next = total > end * size,
-                prev = (start > 1)
+                prev = (start > 1),
+                searchType = pageRequestDTO.searchType,
+                keyword = pageRequestDTO.keyword
             )
         }
     }
