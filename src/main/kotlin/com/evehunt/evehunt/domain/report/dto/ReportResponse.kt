@@ -1,7 +1,5 @@
 package com.evehunt.evehunt.domain.report.dto
 
-import com.evehunt.evehunt.domain.event.model.Event
-import com.evehunt.evehunt.domain.member.model.Member
 import com.evehunt.evehunt.domain.report.model.Report
 import com.evehunt.evehunt.domain.report.model.ReportStatus
 

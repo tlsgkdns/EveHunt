@@ -1,5 +1,6 @@
 package com.evehunt.evehunt.domain.member.service
 
+import com.evehunt.evehunt.domain.mail.dto.MailRequest
 import com.evehunt.evehunt.domain.mail.service.MailService
 import com.evehunt.evehunt.domain.member.dto.*
 import com.evehunt.evehunt.domain.participant.dto.ParticipateResponse
@@ -22,7 +23,7 @@ class MemberServiceImpl(
 
     override fun registerMember(memberRegisterRequest: MemberRegisterRequest): MemberResponse {
         val member = memberService.registerMember(memberRegisterRequest)
-        // mailService.sendMail(member.email, MailRequest(welcomeTitleMessage, welcomeContentMessage(member.name)))
+        mailService.sendMail(member.email, MailRequest(welcomeTitleMessage, welcomeContentMessage(member.name)))
         return member
     }
 
@@ -51,7 +52,7 @@ class MemberServiceImpl(
         val email = getMember(memberId).email
         val name = getMember(memberId).name
         val ret = memberService.withdrawMember(memberId)
-        // mailService.sendMail(email, MailRequest(withdrawTitleMessage, withdrawContentMessage(name)))
+        mailService.sendMail(email, MailRequest(withdrawTitleMessage, withdrawContentMessage(name)))
         return ret
     }
 

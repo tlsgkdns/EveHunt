@@ -44,7 +44,7 @@ class EventTests @Autowired constructor(
 ) {
     val objectMapper: ObjectMapper = ObjectMapper().registerModules(JavaTimeModule())
 
-    var eventId: Long? = 0L;
+    var eventId: Long? = 0L
     val eventCapacity = 100
     companion object {
         const val memberNum = 100

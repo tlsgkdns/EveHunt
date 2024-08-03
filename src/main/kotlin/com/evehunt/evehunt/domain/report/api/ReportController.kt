@@ -3,7 +3,6 @@ package com.evehunt.evehunt.domain.report.api
 import com.evehunt.evehunt.domain.report.dto.ReportHandleRequest
 import com.evehunt.evehunt.domain.report.dto.ReportRequest
 import com.evehunt.evehunt.domain.report.dto.ReportResponse
-import com.evehunt.evehunt.domain.report.service.ReportEntityService
 import com.evehunt.evehunt.domain.report.service.ReportService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
