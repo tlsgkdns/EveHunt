@@ -95,7 +95,7 @@ class EventController(
     }
 
     @GetMapping("/popular")
-    fun getPopularEvents(): ResponseEntity<List<EventResponse>>
+    fun getPopularEvents(): ResponseEntity<List<EventCardResponse>>
     {
         return eventService.getPopularEvent().let {
             ResponseEntity.status(HttpStatus.OK).body(it)

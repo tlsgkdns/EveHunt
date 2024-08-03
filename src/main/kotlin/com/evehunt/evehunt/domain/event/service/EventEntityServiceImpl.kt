@@ -1,9 +1,6 @@
 package com.evehunt.evehunt.domain.event.service
 
-import com.evehunt.evehunt.domain.event.dto.EventCardResponse
-import com.evehunt.evehunt.domain.event.dto.EventEditRequest
-import com.evehunt.evehunt.domain.event.dto.EventHostRequest
-import com.evehunt.evehunt.domain.event.dto.EventResponse
+import com.evehunt.evehunt.domain.event.dto.*
 import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.repository.EventRepository
@@ -12,6 +9,7 @@ import com.evehunt.evehunt.domain.member.repository.MemberRepository
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -28,6 +26,7 @@ class EventEntityServiceImpl(
         return eventRepository.findByIdOrNull(eventId) ?: throw ModelNotFoundException("Event", eventId.toString())
     }
 
+    @CacheEvict(cacheNames = ["eventList"])
     @Transactional
     override fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse {
         val event = getExistEvent(eventId)
@@ -41,6 +40,7 @@ class EventEntityServiceImpl(
         return eventRepository.save(event).let { EventResponse.from(it) }
     }
 
+    @CacheEvict(cacheNames = ["eventList", "popularEvent"])
     @Transactional
     override fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse {
         val member = memberRepository.findMemberByEmail(username)
@@ -55,9 +55,7 @@ class EventEntityServiceImpl(
             EventResponse.from(it)
         }
     }
-
-    @Cacheable(cacheManager = "cacheManager", condition = "#pageRequest.page == 1",
-        key = "#pageRequest.sortType + #pageRequest.searchType + #pageRequest.keyword + #pageRequest.asc", cacheNames = ["eventList"])
+    @Cacheable(cacheManager = "cacheManager", cacheNames = ["eventList"], key = "#pageRequest.searchType + #pageRequest.keyword + #pageRequest.sortType + #pageRequest.asc", condition = "#pageRequest.page == 1")
     @Transactional
     override fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse> {
         val eventPages = eventRepository.searchEvents(pageRequest)
@@ -73,16 +71,8 @@ class EventEntityServiceImpl(
     }
 
     @Transactional
-    override fun setExpiredEventsClose(): List<EventResponse> {
-        val eventList = eventRepository.getExpiredEvents()
-        val list = mutableListOf<EventResponse>()
-        for (event in eventList)
-        {
-            event.eventStatus = EventStatus.CLOSED
-            list.add(EventResponse.from(event))
-            eventRepository.save(event)
-        }
-        return list
+    override fun setExpiredEventsClose(): List<EventIdResponse> {
+       return eventRepository.setExpiredEventsClosed()
     }
 
     override fun closeEvent(eventId: Long?): EventResponse {
@@ -91,11 +81,9 @@ class EventEntityServiceImpl(
         eventRepository.save(event)
         return EventResponse.from(event)
     }
-
+    @Cacheable(cacheManager = "cacheManager", cacheNames = ["popularEvents"], key = "1")
     @Transactional
-    override fun getPopularEvent(): List<EventResponse> {
-        return eventRepository.getPopularEvents().map {
-            EventResponse.from(it)
-        }
+    override fun getPopularEvent(): List<EventCardResponse> {
+        return eventRepository.getPopularEvents()
     }
 }

@@ -2,7 +2,7 @@ package com.evehunt.evehunt.domain.member.api
 
 import com.evehunt.evehunt.domain.member.dto.*
 import com.evehunt.evehunt.domain.member.service.MemberService
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
+import com.evehunt.evehunt.domain.participant.dto.ParticipateResponse
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.InvalidRequestException
@@ -22,7 +22,7 @@ class MemberController(
     fun checkBindingResult(bindingResult: BindingResult)
     {
         if(bindingResult.hasErrors()) {
-            var messages: String = ""
+            var messages = ""
             val list = bindingResult.fieldErrors
             for ((idx, message) in list.map { it.defaultMessage }.withIndex())
             {

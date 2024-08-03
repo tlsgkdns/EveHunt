@@ -12,5 +12,6 @@ enum class ErrorCode(val code: Long, val httpStatus: HttpStatus, val message: St
     UNMATCHED_VALUE(1006, HttpStatus.BAD_REQUEST, "값이 일치하지 않습니다."),
     INVALID_REQUEST(1007, HttpStatus.BAD_REQUEST, "유효한 값이 아닙니다."),
     UNAUTHORIZED_ACCESS(2001, HttpStatus.UNAUTHORIZED, "접근 권한이 없습니다."),
-    UNMATCHED_PASSWORD(2002, HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다.")
+    UNMATCHED_PASSWORD(2002, HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다."),
+    REDIS_LOCK_TIMEOUT(3001, HttpStatus.REQUEST_TIMEOUT, "Redis에서 Lock을 획득 실패했습니다."),
 }

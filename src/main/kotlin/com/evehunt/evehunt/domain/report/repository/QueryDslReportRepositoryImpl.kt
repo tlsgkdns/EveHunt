@@ -13,25 +13,25 @@ class QueryDslReportRepositoryImpl: QueryDslReportRepository, QueryDslSupport() 
     override fun searchReport(pageRequest: PageRequest): Page<Report> {
         val pageable = pageRequest.getPageable()
         val whereClause = BooleanBuilder()
-        val orderBy = when(pageRequest.sortType?.lowercase()) {
+        val orderBy = when(pageRequest.sortType.lowercase()) {
             "reporter" -> {
-                if(pageRequest.asc == false) report.reporter.name.desc()
+                if(!pageRequest.asc) report.reporter.name.desc()
                 else report.reporter.name.asc()
             }
 
             "event" -> {
-                if(pageRequest.asc == false) report.event.title.desc()
+                if(!pageRequest.asc) report.event.title.desc()
                 else report.event.title.asc()
             }
 
             else -> {
-                if(pageRequest.asc == false) report.createdAt.desc()
+                if(!pageRequest.asc) report.createdAt.desc()
                 else report.createdAt.asc()
             }
         }
-        if (pageRequest.keyword != null)
+        if (pageRequest.keyword.isNotEmpty())
         {
-            when(pageRequest.searchType?.lowercase())
+            when(pageRequest.searchType.lowercase())
             {
                 "reporter" -> {
                     whereClause.or(report.reporter.name.contains(pageRequest.keyword))

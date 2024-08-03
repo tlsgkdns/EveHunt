@@ -7,24 +7,26 @@ import com.evehunt.evehunt.domain.event.service.EventService
 import com.evehunt.evehunt.domain.member.dto.MemberRegisterRequest
 import com.evehunt.evehunt.domain.member.dto.MemberSignInRequest
 import com.evehunt.evehunt.domain.member.service.MemberService
-import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
-import com.evehunt.evehunt.domain.participateHistory.model.EventParticipateStatus
-import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
+import com.evehunt.evehunt.domain.participant.dto.EventWinnerRequest
+import com.evehunt.evehunt.domain.participant.dto.ParticipateRequest
+import com.evehunt.evehunt.domain.participant.model.ParticipantStatus
+import com.evehunt.evehunt.domain.participant.service.ParticipantService
+import com.evehunt.evehunt.global.common.page.PageRequest
+import com.evehunt.evehunt.global.exception.exception.InvalidEventException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.time.LocalDateTime
 import java.util.concurrent.CountDownLatch
@@ -33,27 +35,28 @@ import kotlin.random.Random
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class EventTests @Autowired constructor(
     val memberService: MemberService,
     val mockMvc: MockMvc,
     val eventService: EventService,
-    val participateHistoryService: ParticipateHistoryService
+    val participantService: ParticipantService
 ) {
     val objectMapper: ObjectMapper = ObjectMapper().registerModules(JavaTimeModule())
 
-    companion object
-    {
-        private const val memberNum = 100
+    var eventId: Long? = 0L;
+    val eventCapacity = 100
+    companion object {
+        const val memberNum = 100
         @JvmStatic
         @BeforeAll
-        fun registerMember(@Autowired memberService: MemberService)
-        {
-            memberService.deleteAllMember()
+        fun registerMemberAndHostEvent(
+            @Autowired memberService: MemberService
+        ) {
             for (i in 1..memberNum) {
-                val email = i.toString()
                 val memberRegisterRequest = MemberRegisterRequest(
-                    email = email,
-                    name =  Random.nextInt().toString(),
+                    email = i.toString().repeat(2) + "@naver.com",
+                    name = Random.nextInt().toString(),
                     profileImageName = null,
                     password = i.toString()
                 )
@@ -71,10 +74,15 @@ class EventTests @Autowired constructor(
             closeAt = LocalDateTime.now().plusDays(2),
             winMessage = "Winner Winner Chicken Dinner",
             question = "Do you like me?",
-            capacity = 700,
+            capacity = eventCapacity,
             tagAddRequests = null
         )
-        eventService.hostEvent(eventRequest, "1").hostId shouldBe 1L
+        eventId = eventService.hostEvent(eventRequest, "11@naver.com").id
+    }
+    @Test
+    fun getEvents()
+    {
+        eventService.getEvents(PageRequest())
     }
     @Test
     fun getEvent()
@@ -99,8 +107,8 @@ class EventTests @Autowired constructor(
             question = "Hello",
             tagAddRequests = null
         )
-        val event = eventService.getEvent(1)
-        val edited = eventService.editEvent(1, eventEdit)
+        val event = eventService.getEvent(eventId)
+        val edited = eventService.editEvent(eventId, eventEdit)
         edited.title shouldBe eventEdit.title
         edited.winMessage shouldBe eventEdit.winMessage
         edited.description shouldBe eventEdit.description
@@ -112,49 +120,32 @@ class EventTests @Autowired constructor(
     fun closeEvent()
     {
         hostEvent()
-        eventService.closeEvent(1)
-        eventService.getEvent(1) shouldBe null
-    }
-
-    fun participateEvent(id: Long): List<ParticipateResponse>
-    {
-        val loginRequest = MemberSignInRequest(
-            email = id.toString(),
-            password = id.toString()
-        )
-        val eventId = 1L
-        val jwt = memberService.signIn(loginRequest).token
-        val participateJson = objectMapper.writeValueAsString(ParticipateRequest("I am here!"))
-        mockMvc.perform(post("/events/${eventId}/participants")
-            .header("Authorization", "Bearer $jwt")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(participateJson))
-        return eventService.getParticipateHistories(eventId)
+        eventService.closeEvent(eventId)
+        eventService.getEvent(eventId).status shouldBe EventStatus.CLOSED
     }
     @Test
     fun testParticipateEvent()
     {
         hostEvent()
-        val eventId = 1L
-        val list = participateEvent(eventId)
+        participantService.participateEvent(eventId, 1.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Test"))
+        val list = eventService.getParticipants(eventId)
         list.size shouldBe 1
         list[0].eventId shouldBe eventId
-        list[0].memberId shouldBe 1
+        list[0].memberId shouldBe 1L
     }
 
     @Test
     fun testPickWinner()
     {
         hostEvent()
-        val eventId = 1L
-        for(id in 1L .. memberNum) participateEvent(id)
+        for(id in 1L .. memberNum) participantService.participateEvent(eventId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
         val winnerList:MutableList<Long> = mutableListOf()
         for(id in 1L .. memberNum step 2) winnerList.add(id)
         val list = eventService.setEventResult(eventId, EventWinnerRequest(winnerList, winnerList.map { it.toString() }))
         for(id in 1 .. memberNum)
         {
-            if(id % 2 > 0) list[id - 1].status shouldBe EventParticipateStatus.WIN
-            else list[id - 1].status shouldBe EventParticipateStatus.LOSE
+            if(id % 2 > 0) list[id - 1].status shouldBe ParticipantStatus.WIN
+            else list[id - 1].status shouldBe ParticipantStatus.LOSE
         }
     }
 
@@ -168,27 +159,17 @@ class EventTests @Autowired constructor(
 
         for(id in 1L .. threadCount)
         {
-            val loginRequest = MemberSignInRequest(
-                email = id.toString(),
-                password = id.toString()
-            )
-            val eventId = 1L
-            val jwt = memberService.signIn(loginRequest).token
-            val participateJson = objectMapper.writeValueAsString(ParticipateRequest("I am here!"))
             executorService.execute(){
                 try{
-                    mockMvc.perform(post("/events/${eventId}/participants")
-                        .header("Authorization", "Bearer $jwt")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(participateJson))
+                    participantService.participateEvent(eventId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
                 } finally {
                     countDownLatch.countDown()
                 }
             }
         }
         countDownLatch.await()
-        val list = participateHistoryService.getParticipateHistoryByEvent(1L)
-        list.size shouldBe 700
+        val list = participantService.getParticipantsByEvent(1L)
+        list.size shouldBe 70
     }
     @Test
     fun testExpiredEvent()
@@ -203,24 +184,16 @@ class EventTests @Autowired constructor(
             capacity = 700,
             tagAddRequests = null
         )
-        val loginRequest = MemberSignInRequest(
-            email = "1",
-            password = "1"
-        )
-        val jwt = memberService.signIn(loginRequest).token
-        val eventJson = objectMapper.writeValueAsString(eventRequest)
-        mockMvc.perform(post("/events")
-            .header("Authorization", "Bearer $jwt")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(eventJson))
-            .andExpect(MockMvcResultMatchers.status().isOk)
-        for (id in 1 until memberNum) participateEvent(id.toLong())
+        val eId = eventService.hostEvent(eventRequest,  "11@naver.com").id
+        for (id in 3 until memberNum)  participantService.participateEvent(eId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
         Thread.sleep(5001)
         eventService.getEvent(1L).status shouldBe EventStatus.CLOSED
-        participateEvent(memberNum.toLong())
-        val list = participateHistoryService.getParticipateHistoryByEvent(1L)
-        list.size shouldBe memberNum - 1
-        list.forEach { it.status shouldBe EventParticipateStatus.WAIT_RESULT }
+        assertThrows<InvalidEventException> {
+            participantService.participateEvent(eId, "22@naver.com", ParticipateRequest(answer = "Winner Pick"))
+        }
+        val list = participantService.getParticipantsByEvent(1L)
+        list.size shouldBe memberNum - 3
+        list.forEach { it.status shouldBe ParticipantStatus.WAIT_RESULT }
     }
 
     @Test
@@ -255,7 +228,7 @@ class EventTests @Autowired constructor(
     {
         hostEvent()
         val eventId = 1L
-        for(id in 2L .. memberNum) participateEvent(id)
+        for(id in 2L .. memberNum)  participantService.participateEvent(eventId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
         val winnerList:MutableList<Long> = mutableListOf()
         for(id in 2L .. memberNum step 2) winnerList.add(id)
         val loginAnotherMemberRequest = MemberSignInRequest(

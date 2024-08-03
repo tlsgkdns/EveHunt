@@ -1,10 +1,10 @@
 package com.evehunt.evehunt.domain.event.repository
 
 import com.evehunt.evehunt.domain.event.dto.EventCardResponse
-import com.evehunt.evehunt.domain.event.model.Event
+import com.evehunt.evehunt.domain.event.dto.EventIdResponse
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.model.QEvent
-import com.evehunt.evehunt.domain.participateHistory.model.QParticipateHistory
+import com.evehunt.evehunt.domain.participant.model.QParticipant
 import com.evehunt.evehunt.domain.tag.model.QTag
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.infra.querydsl.QueryDslSupport
@@ -16,7 +16,7 @@ import java.time.ZonedDateTime
 
 class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
     private val event = QEvent.event
-    private val participant = QParticipateHistory.participateHistory
+    private val participant = QParticipant.participant1
     private val tag = QTag.tag
     override fun searchEvents(pageRequest: PageRequest): Page<EventCardResponse>
     {
@@ -31,9 +31,10 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
             event.closeAt,
             queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event))
         )).from(event)
-        if(keyword != null)
+
+        if(keyword.isNotEmpty())
         {
-            when(pageRequest.searchType?.lowercase())
+            when(pageRequest.searchType.lowercase())
             {
                 "description" -> query.from(event).where(event.description.contains(keyword))
                 "titledescription" -> {
@@ -45,14 +46,16 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
                     query.where(event.host.name.contains(keyword))
                 }
                 "tag" -> {
-                    query.from(tag).leftJoin(tag.event).where(tag.tagName.eq(keyword))
+                    query.leftJoin(tag).on(tag.event.id.eq(event.id))
+                        .where(tag.tagName.eq(keyword))
                 }
                 "hostid" -> {
                     query.from(event)
                     query.where(event.host.id.eq(keyword.toLong()))
                 }
                 "participate" -> {
-                    query.from(participant).leftJoin(participant.event).where(participant.participant.id.eq(keyword.toLong()))
+                    query.leftJoin(participant).on(participant.event.id.eq(event.id))
+                        .where(participant.participant.id.eq(keyword.toLong()))
                 }
                 else -> {
                     query.from(event)
@@ -60,22 +63,22 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
                 }
             }
         }
-        when(pageRequest.sortType?.lowercase())
+        when(pageRequest.sortType.lowercase())
         {
             "close" -> {
-                if(pageRequest.asc == false) query.orderBy(event.closeAt.desc())
+                if(!pageRequest.asc) query.orderBy(event.closeAt.desc())
                 else query.orderBy(event.closeAt.desc())
             }
             "host" -> {
-                if(pageRequest.asc == false) query.orderBy(event.host.name.desc())
+                if(!pageRequest.asc) query.orderBy(event.host.name.desc())
                 else query.orderBy(event.host.name.asc())
             }
             "title" -> {
-                if(pageRequest.asc == false) query.orderBy(event.title.desc())
+                if(!pageRequest.asc) query.orderBy(event.title.desc())
                 else query.orderBy(event.title.asc())
             }
             else -> {
-                if(pageRequest.asc == false) query.orderBy(event.createdAt.desc())
+                if(!pageRequest.asc) query.orderBy(event.createdAt.desc())
                 else query.orderBy(event.createdAt.asc())
             }
         }
@@ -83,16 +86,37 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
         return PageImpl(query.offset(pageable.offset).limit(pageable.pageSize.toLong()).fetch(), pageable, cnt)
     }
 
-    override fun getExpiredEvents(): List<Event> {
+    override fun setExpiredEventsClosed(): List<EventIdResponse> {
         val whereClause = BooleanBuilder(event.eventStatus.eq(EventStatus.PROCEED))
             .and(event.closeAt.before(ZonedDateTime.now()))
-        return queryFactory.selectFrom(event)
+        val list = queryFactory.select(Projections.constructor(
+            EventIdResponse::class.java,
+            event.id
+        )).from(event)
             .where(whereClause)
             .fetch()
+        queryFactory.update(event)
+                .set(event.eventStatus, EventStatus.CLOSED)
+                .where(whereClause)
+                .execute()
+
+        entityManager.clear()
+        entityManager.flush()
+
+        return list
     }
-    override fun getPopularEvents(): List<Event> {
-        val list = queryFactory.select(event)
+    override fun getPopularEvents(): List<EventCardResponse> {
+        val list = queryFactory.select(Projections.constructor(
+                EventCardResponse::class.java,
+                event.id,
+                event.host.name,
+                event.title,
+                event.capacity,
+                event.closeAt,
+                queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event))
+            ))
             .from(participant)
+            .where(participant.createdAt.after(ZonedDateTime.now().minusDays(1)))
             .leftJoin(participant.event, event)
             .groupBy(participant.event.id)
             .orderBy(event.count().desc())

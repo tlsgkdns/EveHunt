@@ -14,7 +14,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
 
@@ -41,6 +40,7 @@ class MemberEntityServiceImpl(
         return member.let { MemberResponse.from(it) }
     }
 
+    @Transactional
     override fun signIn(memberSignInRequest: MemberSignInRequest): MemberSignInResponse {
         val member = getExistMember(memberSignInRequest.email)
             .takeIf { encoder.matches(memberSignInRequest.password, it.password) }
@@ -91,6 +91,7 @@ class MemberEntityServiceImpl(
         }
     }
 
+    @Transactional
     override fun addAdminAuthority(memberId: Long?): MemberResponse {
         val member = getExistMember(memberId)
         member.roleSet.add(MemberType.ADMIN)
@@ -99,6 +100,7 @@ class MemberEntityServiceImpl(
         }
     }
 
+    @Transactional
     override fun suspendMember(memberId: Long?, suspendDay: Int): MemberResponse {
         val member = getExistMember(memberId)
         val suspendUntil = member.suspendedTime?.plusDays(suspendDay.toLong())

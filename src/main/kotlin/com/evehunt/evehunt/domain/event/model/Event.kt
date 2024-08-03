@@ -28,7 +28,5 @@ class Event(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
-
-
 }
 

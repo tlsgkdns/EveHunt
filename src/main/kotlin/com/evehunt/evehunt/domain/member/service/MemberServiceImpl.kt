@@ -1,10 +1,9 @@
 package com.evehunt.evehunt.domain.member.service
 
-import com.evehunt.evehunt.domain.mail.dto.MailRequest
 import com.evehunt.evehunt.domain.mail.service.MailService
 import com.evehunt.evehunt.domain.member.dto.*
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
-import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
+import com.evehunt.evehunt.domain.participant.dto.ParticipateResponse
+import com.evehunt.evehunt.domain.participant.service.ParticipantService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import org.springframework.stereotype.Service
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Service
 @Service
 class MemberServiceImpl(
     private val memberService: MemberEntityService,
-    private val participateHistoryService: ParticipateHistoryService,
+    private val participantService: ParticipantService,
     private val mailService: MailService
 ): MemberService {
     private final val welcomeTitleMessage = "가입을 환영합니다!"
@@ -52,7 +51,7 @@ class MemberServiceImpl(
         val email = getMember(memberId).email
         val name = getMember(memberId).name
         val ret = memberService.withdrawMember(memberId)
-        mailService.sendMail(email, MailRequest(withdrawTitleMessage, withdrawContentMessage(name)))
+        // mailService.sendMail(email, MailRequest(withdrawTitleMessage, withdrawContentMessage(name)))
         return ret
     }
 
@@ -61,7 +60,7 @@ class MemberServiceImpl(
     }
 
     override fun getParticipatedEvents(pageRequest: PageRequest, username: String): PageResponse<ParticipateResponse> {
-        return participateHistoryService.getParticipateHistoryByMember(username, pageRequest)
+        return participantService.getParticipateHistoryByMember(username, pageRequest)
     }
 
     override fun editPassword(memberId: Long, memberPasswordEditRequest: MemberPasswordEditRequest): MemberResponse {

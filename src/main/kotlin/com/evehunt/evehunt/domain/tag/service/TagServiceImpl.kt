@@ -66,7 +66,7 @@ class TagServiceImpl(
         tagRepository.delete(tag)
     }
 
-
+    @Cacheable(cacheManager = "cacheManager", cacheNames = ["eventTags"], key = "2")
     override fun getPopularTags(): List<TagResponse> {
         return tagRepository.getPopularTags()
             .map {

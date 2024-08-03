@@ -1,4 +1,4 @@
-package com.evehunt.evehunt.domain.participateHistory.dto
+package com.evehunt.evehunt.domain.participant.dto
 
 data class EventWinnerRequest(
     val eventWinners: List<Long>,

@@ -1,17 +1,14 @@
 package com.evehunt.evehunt.domain.event.service
 
-import com.evehunt.evehunt.domain.event.dto.EventCardResponse
-import com.evehunt.evehunt.domain.event.dto.EventEditRequest
-import com.evehunt.evehunt.domain.event.dto.EventHostRequest
-import com.evehunt.evehunt.domain.event.dto.EventResponse
+import com.evehunt.evehunt.domain.event.dto.*
 import com.evehunt.evehunt.domain.mail.dto.MailRequest
 import com.evehunt.evehunt.domain.mail.service.MailService
 import com.evehunt.evehunt.domain.member.service.MemberService
-import com.evehunt.evehunt.domain.participateHistory.dto.EventWinnerRequest
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateRequest
-import com.evehunt.evehunt.domain.participateHistory.dto.ParticipateResponse
-import com.evehunt.evehunt.domain.participateHistory.model.EventParticipateStatus
-import com.evehunt.evehunt.domain.participateHistory.service.ParticipateHistoryService
+import com.evehunt.evehunt.domain.participant.dto.EventWinnerRequest
+import com.evehunt.evehunt.domain.participant.dto.ParticipateRequest
+import com.evehunt.evehunt.domain.participant.dto.ParticipateResponse
+import com.evehunt.evehunt.domain.participant.model.ParticipantStatus
+import com.evehunt.evehunt.domain.participant.service.ParticipantService
 import com.evehunt.evehunt.domain.tag.dto.TagAddRequest
 import com.evehunt.evehunt.domain.tag.dto.TagResponse
 import com.evehunt.evehunt.domain.tag.service.TagService
@@ -27,7 +24,7 @@ class EventServiceImpl(
     private val eventEntityService: EventEntityService,
     private val memberService: MemberService,
     private val mailService: MailService,
-    private val participateHistoryService: ParticipateHistoryService,
+    private val participantService: ParticipantService,
     private val tagService: TagService
 ): EventService {
 
@@ -54,7 +51,7 @@ class EventServiceImpl(
     @Transactional
     override fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse {
         val event = eventEntityService.hostEvent(eventHostRequest, username)
-        // mailService.sendMail(username, MailRequest(eventHostTitleMessage, eventHostContentMessage(event.title)))
+        mailService.sendMail(username, MailRequest(eventHostTitleMessage, eventHostContentMessage(event.title)))
         val tagList = eventHostRequest.tagAddRequests
         tagList?.forEach {
             tagService.addTag(event.id!!, it)
@@ -65,13 +62,10 @@ class EventServiceImpl(
     override fun getEvent(eventId: Long?): EventResponse {
         val event = eventEntityService.getEvent(eventId)
         event.eventTags = tagService.getTags(eventId)
-        event.participantCount = participateHistoryService.getParticipantCount(eventId)
+        event.participantCount = participantService.getParticipantCount(eventId)
         return event
     }
 
-    @Cacheable(cacheManager = "cacheManager", cacheNames = ["eventList"],
-        key = "#pageRequest.page.toString() + #pageRequest.size.toString() + #pageRequest.keyword " +
-            "+ #pageRequest.sortType + #pageRequest.searchType + #pageRequest.asc.toString()")
     override fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse> {
         return eventEntityService.getEvents(pageRequest)
     }
@@ -84,9 +78,9 @@ class EventServiceImpl(
         return eventEntityService.closeEvent(eventId)
     }
 
-    override fun setExpiredEventsClose(): List<EventResponse> {
+    override fun setExpiredEventsClose(): List<EventIdResponse> {
         val expiredEvents = eventEntityService.setExpiredEventsClose()
-        expiredEvents.forEach { participateHistoryService.setParticipantsStatusWait(it.id) }
+        expiredEvents.forEach { participantService.setParticipantsStatusWait(it.id) }
         return expiredEvents
     }
 
@@ -99,55 +93,53 @@ class EventServiceImpl(
         lateinit var participateResponse: ParticipateResponse
         val event = getEvent(eventId)
         try {
-            participateResponse = participateHistoryService.participateEvent(eventId, username, participateRequest)
+            participateResponse = participantService.participateEvent(eventId, username, participateRequest)
         } catch (e: FullCapacityException)
         {
-            /*mailService.sendMail(getEmail(participateResponse.memberId),
-                MailRequest(eventParticipateFailTitleMessage, eventParticipateFailMessage(event.title))) */
+            mailService.sendMail(getEmail(participateResponse.memberId),
+                MailRequest(eventParticipateFailTitleMessage, eventParticipateFailMessage(event.title)))
         }
-        /* mailService.sendMail(getEmail(participateResponse.memberId),
-            MailRequest(eventParticipateSuccessTitleMessage, eventParticipateSuccessMessage(event.title))) */
+        mailService.sendMail(getEmail(participateResponse.memberId),
+            MailRequest(eventParticipateSuccessTitleMessage, eventParticipateSuccessMessage(event.title)))
         return participateResponse
     }
 
     @Transactional
     override fun resignEventParticipate(eventId: Long?, username: String) {
-        participateHistoryService.resignEventParticipate(eventId, username)
+        participantService.resignEventParticipate(eventId, username)
     }
 
     @Cacheable(cacheManager = "cacheManager", cacheNames = ["popularEvents"])
-    override fun getPopularEvent(): List<EventResponse> {
-        return eventEntityService.getPopularEvent().onEach {
-            it.participantCount = participateHistoryService.getParticipantCount(it.id)
-        }
+    override fun getPopularEvent(): List<EventCardResponse> {
+        return eventEntityService.getPopularEvent()
     }
 
     @Transactional
     override fun setEventResult(eventId: Long?, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
-        val list = participateHistoryService.setEventResult(eventId, eventWinnerRequest)
+        val list = participantService.setEventResult(eventId, eventWinnerRequest)
         val title = eventEntityService.getEvent(eventId).title
-        eventEntityService.deleteEvent(eventId)
         for(participant in list)
         {
             val email = memberService.getMember(participant.memberId!!).email
-            val resultMessage = if(participant.status == EventParticipateStatus.LOSE) resultLoseMessage(title)
+            val resultMessage = if(participant.status == ParticipantStatus.LOSE) resultLoseMessage(title)
             else
             {
                 eventWinnerRequest.let {
                     it.winMessages[it.eventWinners.indexOf(participant.id)]
                 }
             }
-            // mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
+            mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
         }
+        eventEntityService.deleteEvent(eventId)
         return list
     }
 
-    override fun getParticipateHistories(eventId: Long?): List<ParticipateResponse> {
-        return participateHistoryService.getParticipateHistoryByEvent(eventId)
+    override fun getParticipants(eventId: Long?): List<ParticipateResponse> {
+        return participantService.getParticipantsByEvent(eventId)
     }
 
-    override fun getParticipateHistory(eventId: Long?, username: String): ParticipateResponse {
-        return participateHistoryService.getParticipateHistory(eventId, username)
+    override fun getParticipant(eventId: Long?, username: String): ParticipateResponse {
+        return participantService.getParticipant(eventId, username)
     }
 
     override fun getTags(eventId: Long?): List<TagResponse> {

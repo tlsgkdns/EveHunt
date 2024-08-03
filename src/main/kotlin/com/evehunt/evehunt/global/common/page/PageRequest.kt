@@ -2,16 +2,15 @@ package com.evehunt.evehunt.global.common.page
 
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
 
 data class PageRequest(
     val page: Int = 1,
     val size: Int = 10,
     val link: String? = null,
-    val asc: Boolean? = true,
-    val sortType: String? = null,
-    val keyword: String? = null,
-    val searchType: String? = null
+    val asc: Boolean = true,
+    val sortType: String = "",
+    val keyword: String = "",
+    val searchType: String = ""
 )
 {
     fun getPageable(): Pageable

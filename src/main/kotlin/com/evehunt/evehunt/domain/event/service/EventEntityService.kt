@@ -1,9 +1,6 @@
 package com.evehunt.evehunt.domain.event.service
 
-import com.evehunt.evehunt.domain.event.dto.EventCardResponse
-import com.evehunt.evehunt.domain.event.dto.EventEditRequest
-import com.evehunt.evehunt.domain.event.dto.EventHostRequest
-import com.evehunt.evehunt.domain.event.dto.EventResponse
+import com.evehunt.evehunt.domain.event.dto.*
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 
@@ -13,7 +10,7 @@ interface EventEntityService {
     fun getEvent(eventId: Long?): EventResponse
     fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse>
     fun deleteEvent(eventId: Long?): Long?
-    fun getPopularEvent(): List<EventResponse>
-    fun setExpiredEventsClose(): List<EventResponse>
+    fun getPopularEvent(): List<EventCardResponse>
+    fun setExpiredEventsClose(): List<EventIdResponse>
     fun closeEvent(eventId: Long?): EventResponse
 }

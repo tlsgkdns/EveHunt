@@ -1,4 +1,4 @@
-package com.evehunt.evehunt.domain.participateHistory.model
+package com.evehunt.evehunt.domain.participant.model
 
 import com.evehunt.evehunt.domain.event.model.Event
 import com.evehunt.evehunt.domain.member.model.Member
@@ -8,7 +8,7 @@ import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
 
 @Entity
-class ParticipateHistory(
+class Participant(
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne(fetch = FetchType.LAZY)
     val event: Event,
@@ -21,5 +21,5 @@ class ParticipateHistory(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
     @Enumerated(EnumType.STRING)
-    var status: EventParticipateStatus = EventParticipateStatus.PARTICIPATING
+    var status: ParticipantStatus = ParticipantStatus.PARTICIPATING
 }
