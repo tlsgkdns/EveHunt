@@ -1,6 +1,7 @@
 package com.evehunt.evehunt.domain.event.service
 
 import com.evehunt.evehunt.domain.event.dto.*
+import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.mail.dto.MailRequest
 import com.evehunt.evehunt.domain.mail.service.MailService
 import com.evehunt.evehunt.domain.member.service.MemberService
@@ -15,7 +16,7 @@ import com.evehunt.evehunt.domain.tag.service.TagService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.FullCapacityException
-import org.springframework.cache.annotation.Cacheable
+import com.evehunt.evehunt.global.exception.exception.InvalidEventException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -70,10 +71,6 @@ class EventServiceImpl(
         return eventEntityService.getEvents(pageRequest)
     }
 
-    override fun deleteEvent(eventId: Long?): Long? {
-        return eventEntityService.deleteEvent(eventId)
-    }
-
     override fun closeEvent(eventId: Long?): EventResponse {
         return eventEntityService.closeEvent(eventId)
     }
@@ -92,12 +89,15 @@ class EventServiceImpl(
     ): ParticipateResponse {
         lateinit var participateResponse: ParticipateResponse
         val event = getEvent(eventId)
+        if(event.status != EventStatus.PROCEED) throw InvalidEventException(eventId)
         try {
             participateResponse = participantService.participateEvent(eventId, username, participateRequest)
         } catch (e: FullCapacityException)
         {
+
             mailService.sendMail(getEmail(participateResponse.memberId),
                 MailRequest(eventParticipateFailTitleMessage, eventParticipateFailMessage(event.title)))
+
         }
         mailService.sendMail(getEmail(participateResponse.memberId),
             MailRequest(eventParticipateSuccessTitleMessage, eventParticipateSuccessMessage(event.title)))
@@ -109,7 +109,6 @@ class EventServiceImpl(
         participantService.resignEventParticipate(eventId, username)
     }
 
-    @Cacheable(cacheManager = "cacheManager", cacheNames = ["popularEvents"])
     override fun getPopularEvent(): List<EventCardResponse> {
         return eventEntityService.getPopularEvent()
     }
@@ -130,7 +129,7 @@ class EventServiceImpl(
             }
             mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
         }
-        eventEntityService.deleteEvent(eventId)
+        eventEntityService.announceEvent(eventId)
         return list
     }
 

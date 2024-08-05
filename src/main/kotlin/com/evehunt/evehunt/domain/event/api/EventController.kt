@@ -70,14 +70,6 @@ class EventController(
             ResponseEntity.status(HttpStatus.OK).body(it)
         }
     }
-    @CheckEventLoginMember
-    @DeleteMapping("/{eventId}")
-    fun deleteEvent(@PathVariable eventId: Long): ResponseEntity<Long>
-    {
-        return eventService.deleteEvent(eventId).let {
-            ResponseEntity.status(HttpStatus.NO_CONTENT).body(it)
-        }
-    }
     @PatchMapping("/{eventId}/close")
     fun closeEvent(@PathVariable eventId: Long): ResponseEntity<EventResponse>
     {

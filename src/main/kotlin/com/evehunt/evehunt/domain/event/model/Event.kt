@@ -13,7 +13,7 @@ class Event(
     var title: String,
     var description: String,
     @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    var image: Image?,
+    var image: Image? = Image(),
     var capacity: Int,
     @Enumerated(EnumType.STRING)
     var eventStatus: EventStatus,

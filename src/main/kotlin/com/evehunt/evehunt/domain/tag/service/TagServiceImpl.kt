@@ -10,7 +10,6 @@ import com.evehunt.evehunt.global.exception.exception.FullCapacityException
 import com.evehunt.evehunt.global.exception.exception.ModelNotFoundException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheConfig
-import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -36,15 +35,12 @@ class TagServiceImpl(
         return tagRepository.findByIdOrNull(tagId)
             ?: throw ModelNotFoundException("Tag", tagId.toString())
     }
-    @Cacheable(cacheManager = "cacheManager", cacheNames = ["eventTags"], key = "#eventId")
     @Transactional
     override fun getTags(eventId: Long?): List<TagResponse> {
         return tagRepository.getTagsByEvent(eventId).map {
             TagResponse.from(it)
         }
     }
-
-    @CachePut(cacheManager = "cacheManager", cacheNames = ["eventTags"], key = "#eventId")
     @Transactional
     override fun addTag(eventId: Long?, tagAddRequest: TagAddRequest): TagResponse {
         val event = getExistEvent(eventId)

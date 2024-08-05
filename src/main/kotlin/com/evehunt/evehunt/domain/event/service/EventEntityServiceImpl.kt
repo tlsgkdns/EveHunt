@@ -40,7 +40,7 @@ class EventEntityServiceImpl(
         return eventRepository.save(event).let { EventResponse.from(it) }
     }
 
-    @CacheEvict(cacheNames = ["eventList", "popularEvent"])
+    @CacheEvict(cacheNames = ["eventList", "popularEvents"])
     @Transactional
     override fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse {
         val member = memberRepository.findMemberByEmail(username)
@@ -61,13 +61,12 @@ class EventEntityServiceImpl(
         val eventPages = eventRepository.searchEvents(pageRequest)
         return PageResponse.of(pageRequest, eventPages.toList(), eventPages.totalElements.toInt())
     }
-
     @Transactional
-    override fun deleteEvent(eventId: Long?): Long? {
+    override fun announceEvent(eventId: Long?): EventResponse {
         val event = getExistEvent(eventId)
-        event.eventStatus = EventStatus.CLOSED
+        event.eventStatus = EventStatus.ANNOUNCED
         eventRepository.save(event)
-        return eventId
+        return EventResponse.from(event)
     }
 
     @Transactional

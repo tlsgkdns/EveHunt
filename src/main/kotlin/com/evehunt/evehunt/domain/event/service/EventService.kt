@@ -14,7 +14,6 @@ interface EventService {
     fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse
     fun getEvent(eventId: Long?): EventResponse
     fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse>
-    fun deleteEvent(eventId: Long?): Long?
     fun setExpiredEventsClose(): List<EventIdResponse>
     fun participateEvent(eventId: Long?, username: String, participateRequest: ParticipateRequest): ParticipateResponse
     fun resignEventParticipate(eventId: Long?, username: String)

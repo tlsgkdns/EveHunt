@@ -9,8 +9,8 @@ interface EventEntityService {
     fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse
     fun getEvent(eventId: Long?): EventResponse
     fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse>
-    fun deleteEvent(eventId: Long?): Long?
     fun getPopularEvent(): List<EventCardResponse>
     fun setExpiredEventsClose(): List<EventIdResponse>
     fun closeEvent(eventId: Long?): EventResponse
+    fun announceEvent(eventId: Long?): EventResponse
 }

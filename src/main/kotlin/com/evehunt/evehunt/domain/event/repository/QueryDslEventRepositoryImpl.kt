@@ -4,6 +4,7 @@ import com.evehunt.evehunt.domain.event.dto.EventCardResponse
 import com.evehunt.evehunt.domain.event.dto.EventIdResponse
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.model.QEvent
+import com.evehunt.evehunt.domain.image.model.QImage
 import com.evehunt.evehunt.domain.participant.model.QParticipant
 import com.evehunt.evehunt.domain.tag.model.QTag
 import com.evehunt.evehunt.global.common.page.PageRequest
@@ -18,6 +19,7 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
     private val event = QEvent.event
     private val participant = QParticipant.participant1
     private val tag = QTag.tag
+    private val image = QImage.image
     override fun searchEvents(pageRequest: PageRequest): Page<EventCardResponse>
     {
         val pageable = pageRequest.getPageable()
@@ -29,9 +31,9 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
             event.title,
             event.capacity,
             event.closeAt,
-            queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event))
-        )).from(event)
-
+            queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event)),
+            event.image
+        )).from(event).leftJoin(event.image, image)
         if(keyword.isNotEmpty())
         {
             when(pageRequest.searchType.lowercase())
@@ -113,7 +115,8 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
                 event.title,
                 event.capacity,
                 event.closeAt,
-                queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event))
+                queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event)),
+                event.image
             ))
             .from(participant)
             .where(participant.createdAt.after(ZonedDateTime.now().minusDays(1)))
