@@ -16,7 +16,6 @@ import com.evehunt.evehunt.domain.tag.service.TagService
 import com.evehunt.evehunt.global.common.RedisLockService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
-import com.evehunt.evehunt.global.exception.exception.FullCapacityException
 import com.evehunt.evehunt.global.exception.exception.InvalidEventException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,8 +26,7 @@ class EventServiceImpl(
     private val memberService: MemberService,
     private val mailService: MailService,
     private val participantService: ParticipantService,
-    private val tagService: TagService,
-    private val redisLockService: RedisLockService
+    private val tagService: TagService
 ): EventService {
 
     private final val resultTitleMessage = "이벤트 결과 안내드립니다."
