@@ -1,6 +1,5 @@
 package com.evehunt.evehunt.global.infra.async
 
-import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.AsyncConfigurer
@@ -15,9 +14,9 @@ class AsyncConfig: AsyncConfigurer {
     @Bean
     override fun getAsyncExecutor(): Executor{
         val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 2
-        executor.maxPoolSize = 5
-        executor.queueCapacity = 10
+        executor.corePoolSize = 100
+        executor.maxPoolSize = 150
+        executor.queueCapacity = 50
         executor.initialize()
         return executor
     }

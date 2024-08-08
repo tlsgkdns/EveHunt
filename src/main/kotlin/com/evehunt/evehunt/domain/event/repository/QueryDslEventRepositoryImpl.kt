@@ -10,10 +10,13 @@ import com.evehunt.evehunt.domain.tag.model.QTag
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.infra.querydsl.QueryDslSupport
 import com.querydsl.core.BooleanBuilder
+import com.querydsl.core.types.ExpressionUtils
 import com.querydsl.core.types.Projections
+import com.querydsl.core.types.dsl.Expressions
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import java.time.ZonedDateTime
+
 
 class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
     private val event = QEvent.event
@@ -108,6 +111,7 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
         return list
     }
     override fun getPopularEvents(): List<EventCardResponse> {
+        val participantCount = Expressions.numberPath(Long::class.java, "participantCount")
         val list = queryFactory.select(Projections.constructor(
                 EventCardResponse::class.java,
                 event.id,
@@ -115,14 +119,12 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
                 event.title,
                 event.capacity,
                 event.closeAt,
-                queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event)),
+                ExpressionUtils.`as`(queryFactory.select(participant.count()).from(participant).where(participant.event.eq(event)), participantCount),
                 event.image
             ))
-            .from(participant)
-            .where(participant.createdAt.after(ZonedDateTime.now().minusDays(1)))
-            .leftJoin(participant.event, event)
-            .groupBy(participant.event.id)
-            .orderBy(event.count().desc())
+            .from(event)
+            .leftJoin(event.image, image)
+            .orderBy(participantCount.desc())
         return if(list.fetch().size > 5) list.limit(5).fetch()
         else list.fetch()
     }

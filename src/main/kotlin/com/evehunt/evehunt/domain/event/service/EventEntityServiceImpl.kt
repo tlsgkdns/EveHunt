@@ -80,7 +80,7 @@ class EventEntityServiceImpl(
         eventRepository.save(event)
         return EventResponse.from(event)
     }
-    @Cacheable(cacheManager = "cacheManager", cacheNames = ["popularEvents"], key = "1")
+ 
     @Transactional
     override fun getPopularEvent(): List<EventCardResponse> {
         return eventRepository.getPopularEvents()

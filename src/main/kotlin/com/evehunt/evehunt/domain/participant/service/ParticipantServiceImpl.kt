@@ -43,7 +43,6 @@ class ParticipantServiceImpl(
         return participantRepository.getParticipant(eventId, memberEmail)
             ?: throw ModelNotFoundException("Participate", memberEmail)
     }
-    @Transactional
     override fun participateEvent(eventId: Long?, username: String, participateRequest: ParticipateRequest): ParticipateResponse {
         lateinit var participateHistoryResponse: ParticipateResponse
         redisLockService.tryLockWith("Participant $eventId")

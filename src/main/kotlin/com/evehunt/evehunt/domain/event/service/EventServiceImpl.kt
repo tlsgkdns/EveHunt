@@ -13,6 +13,7 @@ import com.evehunt.evehunt.domain.participant.service.ParticipantService
 import com.evehunt.evehunt.domain.tag.dto.TagAddRequest
 import com.evehunt.evehunt.domain.tag.dto.TagResponse
 import com.evehunt.evehunt.domain.tag.service.TagService
+import com.evehunt.evehunt.global.common.RedisLockService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.FullCapacityException
@@ -26,20 +27,12 @@ class EventServiceImpl(
     private val memberService: MemberService,
     private val mailService: MailService,
     private val participantService: ParticipantService,
-    private val tagService: TagService
+    private val tagService: TagService,
+    private val redisLockService: RedisLockService
 ): EventService {
 
     private final val resultTitleMessage = "이벤트 결과 안내드립니다."
-    private final val eventHostTitleMessage = "이벤트를 성공적으로 개최했습니다."
-    private final val eventParticipateSuccessTitleMessage = "이벤트에 성공적으로 참여하였습니다."
-    private final val eventParticipateFailTitleMessage = "이벤트에 참여하지 못했습니다."
     private final fun resultLoseMessage(title: String) = "${title}에 당첨되지 않았습니다."
-    private final fun eventHostContentMessage(title: String) = "${title}를 성공적으로 개최하였습니다."
-    private final fun eventParticipateSuccessMessage(title: String) = "${title}에 성공적으로 참여하였습니다."
-    private final fun eventParticipateFailMessage(title: String) = "${title}에 참여하지 못했습니다."
-
-    private fun getEmail(memberId: Long?): String
-        = memberService.getMember(memberId).email
     @Transactional
     override fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse {
         tagService.deleteTags(eventId)
@@ -52,7 +45,6 @@ class EventServiceImpl(
     @Transactional
     override fun hostEvent(eventHostRequest: EventHostRequest, username: String): EventResponse {
         val event = eventEntityService.hostEvent(eventHostRequest, username)
-        mailService.sendMail(username, MailRequest(eventHostTitleMessage, eventHostContentMessage(event.title)))
         val tagList = eventHostRequest.tagAddRequests
         tagList?.forEach {
             tagService.addTag(event.id!!, it)
@@ -67,13 +59,11 @@ class EventServiceImpl(
         return event
     }
 
-    override fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse> {
-        return eventEntityService.getEvents(pageRequest)
-    }
+    override fun getEvents(pageRequest: PageRequest): PageResponse<EventCardResponse>
+        = eventEntityService.getEvents(pageRequest)
 
-    override fun closeEvent(eventId: Long?): EventResponse {
-        return eventEntityService.closeEvent(eventId)
-    }
+    override fun closeEvent(eventId: Long?): EventResponse =
+        eventEntityService.closeEvent(eventId)
 
     override fun setExpiredEventsClose(): List<EventIdResponse> {
         val expiredEvents = eventEntityService.setExpiredEventsClose()
@@ -81,27 +71,14 @@ class EventServiceImpl(
         return expiredEvents
     }
 
-    @Transactional
     override fun participateEvent(
         eventId: Long?,
         username: String,
         participateRequest: ParticipateRequest
     ): ParticipateResponse {
-        lateinit var participateResponse: ParticipateResponse
         val event = getEvent(eventId)
         if(event.status != EventStatus.PROCEED) throw InvalidEventException(eventId)
-        try {
-            participateResponse = participantService.participateEvent(eventId, username, participateRequest)
-        } catch (e: FullCapacityException)
-        {
-
-            mailService.sendMail(getEmail(participateResponse.memberId),
-                MailRequest(eventParticipateFailTitleMessage, eventParticipateFailMessage(event.title)))
-
-        }
-        mailService.sendMail(getEmail(participateResponse.memberId),
-            MailRequest(eventParticipateSuccessTitleMessage, eventParticipateSuccessMessage(event.title)))
-        return participateResponse
+        return participantService.participateEvent(eventId, username, participateRequest)
     }
 
     @Transactional
