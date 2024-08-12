@@ -13,10 +13,10 @@ import com.evehunt.evehunt.domain.participant.service.ParticipantService
 import com.evehunt.evehunt.domain.tag.dto.TagAddRequest
 import com.evehunt.evehunt.domain.tag.dto.TagResponse
 import com.evehunt.evehunt.domain.tag.service.TagService
-import com.evehunt.evehunt.global.common.RedisLockService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
 import com.evehunt.evehunt.global.exception.exception.InvalidEventException
+import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -31,6 +31,7 @@ class EventServiceImpl(
 
     private final val resultTitleMessage = "이벤트 결과 안내드립니다."
     private final fun resultLoseMessage(title: String) = "${title}에 당첨되지 않았습니다."
+    @CheckEventLoginMember
     @Transactional
     override fun editEvent(eventId: Long?, eventEditRequest: EventEditRequest): EventResponse {
         tagService.deleteTags(eventId)
@@ -76,7 +77,10 @@ class EventServiceImpl(
     ): ParticipateResponse {
         val event = getEvent(eventId)
         if(event.status != EventStatus.PROCEED) throw InvalidEventException(eventId)
-        return participantService.participateEvent(eventId, username, participateRequest)
+        val ret = participantService.participateEvent(eventId, username, participateRequest)
+        if(event.capacity == participantService.getParticipantCount(eventId))
+            eventEntityService.closeEvent(eventId)
+        return ret
     }
 
     @Transactional
@@ -88,6 +92,7 @@ class EventServiceImpl(
         return eventEntityService.getPopularEvent()
     }
 
+    @CheckEventLoginMember
     @Transactional
     override fun setEventResult(eventId: Long?, eventWinnerRequest: EventWinnerRequest): List<ParticipateResponse> {
         val list = participantService.setEventResult(eventId, eventWinnerRequest)

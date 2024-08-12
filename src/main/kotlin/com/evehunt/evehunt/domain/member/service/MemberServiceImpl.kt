@@ -7,6 +7,7 @@ import com.evehunt.evehunt.domain.participant.dto.ParticipateResponse
 import com.evehunt.evehunt.domain.participant.service.ParticipantService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.common.page.PageResponse
+import com.evehunt.evehunt.global.infra.aop.annotation.CheckEventLoginMember
 import org.springframework.stereotype.Service
 
 @Service
@@ -39,7 +40,7 @@ class MemberServiceImpl(
     override fun getMember(memberId: Long?): MemberResponse {
         return memberService.getMember(memberId)
     }
-
+    @CheckEventLoginMember
     override fun editMember(memberId: Long, memberEditRequest: MemberEditRequest): MemberResponse {
         return memberService.editMember(memberId, memberEditRequest)
     }

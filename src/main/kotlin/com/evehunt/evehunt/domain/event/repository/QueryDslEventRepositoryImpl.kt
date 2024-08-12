@@ -124,6 +124,7 @@ class QueryDslEventRepositoryImpl: QueryDslSupport(), QueryDslEventRepository {
             ))
             .from(event)
             .leftJoin(event.image, image)
+            .where(event.eventStatus.eq(EventStatus.PROCEED))
             .orderBy(participantCount.desc())
         return if(list.fetch().size > 5) list.limit(5).fetch()
         else list.fetch()

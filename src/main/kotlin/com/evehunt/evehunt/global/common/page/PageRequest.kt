@@ -7,7 +7,7 @@ data class PageRequest(
     val page: Int = 1,
     val size: Int = 10,
     val link: String? = null,
-    val asc: Boolean = true,
+    val asc: Boolean = false,
     val sortType: String = "",
     val keyword: String = "",
     val searchType: String = ""

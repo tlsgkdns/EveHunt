@@ -14,9 +14,9 @@ class AsyncConfig: AsyncConfigurer {
     @Bean
     override fun getAsyncExecutor(): Executor{
         val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 100
-        executor.maxPoolSize = 150
-        executor.queueCapacity = 50
+        executor.corePoolSize = 10
+        executor.maxPoolSize = 15
+        executor.queueCapacity = 2001
         executor.initialize()
         return executor
     }

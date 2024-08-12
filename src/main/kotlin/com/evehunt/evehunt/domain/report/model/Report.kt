@@ -15,15 +15,15 @@ class Report(
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne(fetch = FetchType.LAZY)
     val event: Event?,
-    val reason: String
+    val reason: String,
+    @Enumerated(EnumType.STRING)
+    var processed: ReportStatus = ReportStatus.WAIT
 ): BaseTimeEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
 
-    @Enumerated(EnumType.STRING)
-    var processed: ReportStatus = ReportStatus.WAIT
     fun setProcess(accept: Boolean)
     {
         processed = if(accept) ReportStatus.ACCEPT

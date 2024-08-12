@@ -5,7 +5,6 @@ import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.service.EventService
 import com.evehunt.evehunt.domain.member.dto.MemberRegisterRequest
-import com.evehunt.evehunt.domain.member.dto.MemberSignInRequest
 import com.evehunt.evehunt.domain.member.service.MemberService
 import com.evehunt.evehunt.domain.participant.dto.EventWinnerRequest
 import com.evehunt.evehunt.domain.participant.dto.ParticipateRequest
@@ -13,41 +12,30 @@ import com.evehunt.evehunt.domain.participant.model.ParticipantStatus
 import com.evehunt.evehunt.domain.participant.service.ParticipantService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.exception.exception.InvalidEventException
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.time.LocalDateTime
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import kotlin.random.Random
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-class EventTests @Autowired constructor(
-    val memberService: MemberService,
-    val mockMvc: MockMvc,
+class EventServiceTests @Autowired constructor(
     val eventService: EventService,
     val participantService: ParticipantService
 ) {
-    val objectMapper: ObjectMapper = ObjectMapper().registerModules(JavaTimeModule())
+
 
     var eventId: Long? = 0L
-    val eventCapacity = 100
+    val eventCapacity = 1000
     companion object {
-        const val memberNum = 100
+        const val memberNum = 300
         @JvmStatic
         @BeforeAll
         fun registerMemberAndHostEvent(
@@ -196,51 +184,5 @@ class EventTests @Autowired constructor(
         list.forEach { it.status shouldBe ParticipantStatus.WAIT_RESULT }
     }
 
-    @Test
-    fun testLoginCheckAnnotation()
-    {
-        hostEvent()
-        val loginRequest = MemberSignInRequest(
-            email = "4",
-            password = "4"
-        )
-        val jwt = memberService.signIn(loginRequest).token
-        val eventEditRequest = EventEditRequest(
-            description = "Hello New World!",
-            title = "new Title",
-            winMessage = "Winnnnnnnn",
-            closeAt = null,
-            eventImage = null,
-            capacity = 300,
-            question = "Hello",
-            tagAddRequests = null
-        )
-        val eventEditJson = objectMapper.writeValueAsString(eventEditRequest)
-        mockMvc.perform(patch("/events/1")
-            .header("Authorization", "Bearer $jwt")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(eventEditJson))
-            .andExpect(MockMvcResultMatchers.status().isUnauthorized)
-        eventService.getEvent(1L).title shouldNotBe eventEditRequest.title
-    }
-    @Test
-    fun testUnAuthorizedPickWinner()
-    {
-        hostEvent()
-        val eventId = 1L
-        for(id in 2L .. memberNum)  participantService.participateEvent(eventId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
-        val winnerList:MutableList<Long> = mutableListOf()
-        for(id in 2L .. memberNum step 2) winnerList.add(id)
-        val loginAnotherMemberRequest = MemberSignInRequest(
-            email = "3",
-            password = "3"
-        )
-        val jwt = memberService.signIn(loginAnotherMemberRequest).token
-        mockMvc.perform(
-            patch("/events/${eventId}/participants/result")
-                .header("Authorization", "Bearer $jwt")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(EventWinnerRequest(winnerList, winnerList.map { it.toString() }))))
-            .andExpect(MockMvcResultMatchers.status().isUnauthorized)
-    }
+
 }

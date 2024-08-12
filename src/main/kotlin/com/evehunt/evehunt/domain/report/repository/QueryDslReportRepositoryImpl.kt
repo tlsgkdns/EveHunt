@@ -2,6 +2,7 @@ package com.evehunt.evehunt.domain.report.repository
 
 import com.evehunt.evehunt.domain.report.model.QReport
 import com.evehunt.evehunt.domain.report.model.Report
+import com.evehunt.evehunt.domain.report.model.ReportStatus
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.infra.querydsl.QueryDslSupport
 import com.querydsl.core.BooleanBuilder
@@ -12,7 +13,7 @@ class QueryDslReportRepositoryImpl: QueryDslReportRepository, QueryDslSupport() 
     val report: QReport = QReport.report
     override fun searchReport(pageRequest: PageRequest): Page<Report> {
         val pageable = pageRequest.getPageable()
-        val whereClause = BooleanBuilder()
+        val whereClause = BooleanBuilder(report.processed.eq(ReportStatus.WAIT))
         val orderBy = when(pageRequest.sortType.lowercase()) {
             "reporter" -> {
                 if(!pageRequest.asc) report.reporter.name.desc()

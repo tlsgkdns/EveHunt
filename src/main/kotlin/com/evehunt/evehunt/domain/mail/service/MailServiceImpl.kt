@@ -1,6 +1,7 @@
 package com.evehunt.evehunt.domain.mail.service
 
 import com.evehunt.evehunt.domain.mail.dto.MailRequest
+import com.evehunt.evehunt.global.common.RedisLockService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class MailServiceImpl(
     private val javaMailSender: JavaMailSender,
+    private val lockService: RedisLockService,
     @Value("\${spring.mail.username}")
     val from: String
 ): MailService {
