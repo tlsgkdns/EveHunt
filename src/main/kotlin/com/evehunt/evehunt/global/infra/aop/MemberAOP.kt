@@ -21,7 +21,7 @@ class MemberAOP(
     fun checkEventMember(joinPoint: JoinPoint)
     {
         val method = (joinPoint.signature as MethodSignature).method
-        val username = (SecurityContextHolder.getContext().authentication.principal as UserDetails).username
+        val username = (SecurityContextHolder.getContext()?.authentication?.principal as UserDetails).username
         val parameterValues = joinPoint.args
         val parameters = method.parameters
         for(i in parameters.indices)

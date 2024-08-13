@@ -24,7 +24,7 @@ class MemberServiceImpl(
 
     override fun registerMember(memberRegisterRequest: MemberRegisterRequest): MemberResponse {
         val member = memberService.registerMember(memberRegisterRequest)
-        mailService.sendMail(member.email, MailRequest(welcomeTitleMessage, welcomeContentMessage(member.name)))
+        mailService.addMail(MailRequest(member.email, welcomeTitleMessage, welcomeContentMessage(member.name)))
         return member
     }
 
@@ -53,7 +53,7 @@ class MemberServiceImpl(
         val email = getMember(memberId).email
         val name = getMember(memberId).name
         val ret = memberService.withdrawMember(memberId)
-        mailService.sendMail(email, MailRequest(withdrawTitleMessage, withdrawContentMessage(name)))
+        mailService.addMail(MailRequest(email, withdrawTitleMessage, withdrawContentMessage(name)))
         return ret
     }
 

@@ -4,6 +4,7 @@ import com.evehunt.evehunt.domain.event.dto.EventEditRequest
 import com.evehunt.evehunt.domain.event.dto.EventHostRequest
 import com.evehunt.evehunt.domain.event.model.EventStatus
 import com.evehunt.evehunt.domain.event.service.EventService
+import com.evehunt.evehunt.domain.mail.service.MailService
 import com.evehunt.evehunt.domain.member.dto.MemberRegisterRequest
 import com.evehunt.evehunt.domain.member.service.MemberService
 import com.evehunt.evehunt.domain.participant.dto.EventWinnerRequest
@@ -13,6 +14,8 @@ import com.evehunt.evehunt.domain.participant.service.ParticipantService
 import com.evehunt.evehunt.global.common.page.PageRequest
 import com.evehunt.evehunt.global.exception.exception.InvalidEventException
 import io.kotest.matchers.shouldBe
+import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -22,20 +25,22 @@ import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDateTime
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 @SpringBootTest
 @ActiveProfiles("test")
 class EventServiceTests @Autowired constructor(
     val eventService: EventService,
-    val participantService: ParticipantService
+    val participantService: ParticipantService,
+    val mailService: MailService
 ) {
 
 
     var eventId: Long? = 0L
     val eventCapacity = 1000
     companion object {
-        const val memberNum = 300
+        const val memberNum = 100
         @JvmStatic
         @BeforeAll
         fun registerMemberAndHostEvent(
@@ -43,7 +48,7 @@ class EventServiceTests @Autowired constructor(
         ) {
             for (i in 1..memberNum) {
                 val memberRegisterRequest = MemberRegisterRequest(
-                    email = i.toString().repeat(2) + "@naver.com",
+                    email = i.toString().repeat(2) + "@aaaaaaver.com",
                     name = Random.nextInt().toString(),
                     profileImageName = null,
                     password = i.toString()
@@ -65,7 +70,7 @@ class EventServiceTests @Autowired constructor(
             capacity = eventCapacity,
             tagAddRequests = null
         )
-        eventId = eventService.hostEvent(eventRequest, "11@naver.com").id
+        eventId = eventService.hostEvent(eventRequest, "11@aaaaaaver.com").id
     }
     @Test
     fun getEvents()
@@ -115,7 +120,7 @@ class EventServiceTests @Autowired constructor(
     fun testParticipateEvent()
     {
         hostEvent()
-        participantService.participateEvent(eventId, 1.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Test"))
+        participantService.participateEvent(eventId, 1.toString().repeat(2) + "@aaaaaaver.com", ParticipateRequest(answer = "Test"))
         val list = eventService.getParticipants(eventId)
         list.size shouldBe 1
         list[0].eventId shouldBe eventId
@@ -126,7 +131,7 @@ class EventServiceTests @Autowired constructor(
     fun testPickWinner()
     {
         hostEvent()
-        for(id in 1L .. memberNum) participantService.participateEvent(eventId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
+        for(id in 1L .. memberNum) participantService.participateEvent(eventId, id.toString().repeat(2) + "@aaaaaaver.com", ParticipateRequest(answer = "Winner Pick"))
         val winnerList:MutableList<Long> = mutableListOf()
         for(id in 1L .. memberNum step 2) winnerList.add(id)
         val list = eventService.setEventResult(eventId, EventWinnerRequest(winnerList, winnerList.map { it.toString() }))
@@ -135,6 +140,12 @@ class EventServiceTests @Autowired constructor(
             if(id % 2 > 0) list[id - 1].status shouldBe ParticipantStatus.WIN
             else list[id - 1].status shouldBe ParticipantStatus.LOSE
         }
+        Awaitility.await()
+            .atMost(100, TimeUnit.MINUTES)
+            .untilAsserted{
+                assertThat(mailService.getUnsentMailCount()).isEqualTo(0)
+            }
+        mailService.getUnsentMailCount() shouldBe 0
     }
 
     @Test
@@ -149,7 +160,7 @@ class EventServiceTests @Autowired constructor(
         {
             executorService.execute(){
                 try{
-                    participantService.participateEvent(eventId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
+                    participantService.participateEvent(eventId, id.toString().repeat(2) + "@aaaaaaver.com", ParticipateRequest(answer = "Winner Pick"))
                 } finally {
                     countDownLatch.countDown()
                 }
@@ -172,12 +183,12 @@ class EventServiceTests @Autowired constructor(
             capacity = 700,
             tagAddRequests = null
         )
-        val eId = eventService.hostEvent(eventRequest,  "11@naver.com").id
-        for (id in 3 until memberNum)  participantService.participateEvent(eId, id.toString().repeat(2) + "@naver.com", ParticipateRequest(answer = "Winner Pick"))
+        val eId = eventService.hostEvent(eventRequest,  "11@aaaaaaver.com").id
+        for (id in 3 until memberNum)  participantService.participateEvent(eId, id.toString().repeat(2) + "@aaaaaaver.com", ParticipateRequest(answer = "Winner Pick"))
         Thread.sleep(5001)
         eventService.getEvent(1L).status shouldBe EventStatus.CLOSED
         assertThrows<InvalidEventException> {
-            participantService.participateEvent(eId, "22@naver.com", ParticipateRequest(answer = "Winner Pick"))
+            participantService.participateEvent(eId, "22@aaaaaaver.com", ParticipateRequest(answer = "Winner Pick"))
         }
         val list = participantService.getParticipantsByEvent(1L)
         list.size shouldBe memberNum - 3

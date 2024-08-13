@@ -107,7 +107,7 @@ class EventServiceImpl(
                     it.winMessages[it.eventWinners.indexOf(participant.id)]
                 }
             }
-            mailService.sendMail(email, MailRequest(resultTitleMessage, resultMessage))
+            mailService.addMail(MailRequest(email, resultTitleMessage, resultMessage))
         }
         eventEntityService.announceEvent(eventId)
         return list
