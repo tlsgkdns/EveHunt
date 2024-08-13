@@ -64,8 +64,9 @@ nGrinder를 통한 성능 테스트 결과, 에러 발생으로 인해 테스트
 3. Scheduler 활용
 - 한 번에 메일을 보내서 문제가 발생한 것이라면, 메일을 나눠서 보내는 것이 어떨까란 생각으로 전환햇다.
 - 데이터베이스에 Mail 테이블을 만들어서, 메일을 보내는 대신에, 이 테이블에 저장하고, Scheduler가 정기적으로 아직 보내지 않은 Mail들을 부분적으로 가져와서, 보내는 파라다임으로 수정하였다.
-<img src="https://github.com/user-attachments/assets/c6f85420-422a-436d-b6b7-280f17551477">
+<img src="https://github.com/user-attachments/assets/db210d48-e72e-44e5-9722-5d4fb646d21a">
 <img src="https://github.com/user-attachments/assets/2f54d5f3-a3ca-4187-baa5-c35f2d7ba0a1">
+
 - 오류 없이 안정적으로 메일이 보내지는 것을 확인해서, 이 방법을 택하였다.
 
 ## 이 프로젝트를 통해 배운 것들
