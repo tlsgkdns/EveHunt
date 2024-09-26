@@ -2,13 +2,16 @@
 ## 개요
 - 프로젝트 소개: 이벤트 열 수 있는 사이트
 - 프로젝트 계기: 각종 커뮤니티에서 간단하게 이벤트를 여는 경우가 있다. 이러한 이벤트를 간편하게 열고 참여할 수 있는 사이트가 있으면 좋겠다고 생각을 하여 사이트를 만들었다.
-- 프로젝트 기간: 2024.06.17 ~ 2024.08.02
+- 프로젝트 기간: 2024.06 ~ 2024.08
 - 프로젝트 인원: 1인
 - 프론트엔드 링크: [EveHuntVue](https://github.com/tlsgkdns/EveHuntVue)
 ## 개발 환경
 * OS: <img src="https://img.shields.io/badge/window 10-0078D6?style=for-the-badge&logo=window10&logoColor=white">
 * IDE: <img src="https://img.shields.io/badge/intellij 2023.3.1-000000?style=for-the-badge&logo=intellijidea&logoColor=white">
 * 실행 브라우저: <img src="https://img.shields.io/badge/chrome-4285f4?style=for-the-badge&logo=googlechrome&logoColor=white">
+## ERD
+<img src="https://github.com/user-attachments/assets/70e86498-4747-4a86-8c65-d8a25bd8a1a3">
+
 ## 기술 스택
 - 프론트엔드: <img src="https://img.shields.io/badge/vue.js-4FC08D?style=for-the-badge&logo=vue.js&logoColor=black"><img src="https://img.shields.io/badge/Css-1572B6?style=for-the-badge&logo=css&logoColor=white">
 - 백엔드: <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=Spring Boot&logoColor=black"><img src="https://img.shields.io/badge/kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white">
@@ -54,7 +57,7 @@
 - 10명 남짓한 인원의 한계가 100명으로 늘어났지만 목표치인 1000명에 다다르지 못했다.
 2. Lock 사용
 - 메일을 보내는 메소드에 Lock 사용을 시도했다.
-- Lock이 timeout 되는 등의 여러 오류가 발생해, 바로 포기했다.
+- Lock이 timeout 되는 등의 여러 오류가 발생해, 이 안을 포기했다.
 3. Scheduler 활용
 - 한 번에 메일을 보내서 문제가 발생한 것이라면, 메일을 나눠서 보내는 것이 어떨까란 생각으로 전환햇다.
 - 데이터베이스에 Mail 테이블을 만들어서, 메일을 보내는 대신에, 이 테이블에 저장하고, Scheduler가 정기적으로 아직 보내지 않은 Mail들을 부분적으로 가져와서, 보내는 파라다임으로 수정하였다.
