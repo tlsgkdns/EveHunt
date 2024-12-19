@@ -23,8 +23,8 @@ class SwaggerConfig {
         .addSecurityItem(SecurityRequirement().addList(SECURITY_SCHEMA_NAME))
         .info(
             Info()
-                .title("RICU")
-                .description("Welcome to RICU Schema")
+                .title("EveHunt")
+                .description("Welcome to EveHunt Schema")
                 .version("1.0.0")
         )
 }

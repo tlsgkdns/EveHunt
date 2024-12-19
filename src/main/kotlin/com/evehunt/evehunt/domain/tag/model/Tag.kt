@@ -1,16 +1,18 @@
 package com.evehunt.evehunt.domain.tag.model
 
 import com.evehunt.evehunt.domain.event.model.Event
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.ManyToOne
+import jakarta.persistence.*
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
 
 @Entity
 class Tag (
-    @ManyToOne
-    private val event: Event,
-    private val tagName: String
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    var event: Event?,
+    var tagName: String?
 ){
     @Id
-    private val id: Long? = null
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null
 }
